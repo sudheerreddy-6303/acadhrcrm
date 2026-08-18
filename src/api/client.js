@@ -1,5 +1,5 @@
 // Thin fetch wrapper that attaches the JWT and normalizes errors.
-const BASE = import.meta.env.VITE_API_URL || 'acadhrcrm-backend-production.up.railway.app/api';
+const BASE = import.meta.env.VITE_API_URL || 'https://acadhrcrm-backend-production.up.railway.app/api';
 
 function getToken() {
   return localStorage.getItem('acadhr_crm_token');
