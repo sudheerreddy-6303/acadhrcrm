@@ -52,7 +52,7 @@ export default function AcadHrs() {
       <div className="page-head">
         <div>
           <h2>AcadHrs</h2>
-          <p className="muted">Telecaller performance — click a name, then click any card to drill in</p>
+          <p className="muted">AcadHr performance — click a name, then click any card to drill in</p>
         </div>
       </div>
 
@@ -68,7 +68,7 @@ export default function AcadHrs() {
             {t.name}
           </button>
         ))}
-        {list.length === 0 && !error && <p className="muted">No telecallers yet. Add them in Users.</p>}
+        {list.length === 0 && !error && <p className="muted">No AcadHrs yet. Add them in Users.</p>}
       </div>
 
       {loading && <p className="muted" style={{ marginTop: 20 }}>Loading…</p>}

@@ -9,13 +9,18 @@ import Teachers from './pages/Teachers';
 import Tutors from './pages/Tutors';
 import Schools from './pages/Schools';
 import Tuitions from './pages/Tuitions';
+import FollowUpPage from './pages/FollowUpPage';
 import Import from './pages/Import';
+import ImportAssign from './pages/ImportAssign';
+import FetchTutors from './pages/FetchTutors';
 import AcadHrs from './pages/AcadHrs';
 import Users from './pages/Users';
+import Toast from './components/Toast';
 
 export default function App() {
   return (
     <AuthProvider>
+      <Toast />
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -33,7 +38,17 @@ export default function App() {
             <Route path="/tutors" element={<Tutors />} />
             <Route path="/schools" element={<Schools />} />
             <Route path="/tuitions" element={<Tuitions />} />
+            <Route path="/followup/:type/:id" element={<FollowUpPage />} />
             <Route path="/import" element={<Import />} />
+            <Route path="/import-assign" element={<ImportAssign />} />
+            <Route
+              path="/fetch-tutors"
+              element={
+                <ProtectedRoute adminOnly>
+                  <FetchTutors />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/acadhrs"
               element={

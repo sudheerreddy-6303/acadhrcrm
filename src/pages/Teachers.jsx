@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import ContactActions from '../components/ContactActions';
 import DirectoryOverview from '../components/DirectoryOverview';
 import {
-  ChipMultiSelect, SUBJECTS, BOARDS, CLASSES, EXPERIENCE, INDIAN_STATES, CITIES,
+  ChipMultiSelect, SUBJECTS, BOARDS, CLASSES, EXPERIENCE, INDIAN_STATES, CITIES, COUNTRIES,
 } from '../components/FieldControls';
 
 const STATUS_LABEL = { active: 'Active', pending: 'Pending', inactive: 'Inactive' };
@@ -17,12 +17,38 @@ export default function Teachers() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [registration, setRegistration] = useState('');
+  const [countryF, setCountryF] = useState('');
   const [stateF, setStateF] = useState('');
   const [cityF, setCityF] = useState('');
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
+  const [telecallers, setTelecallers] = useState([]);
+
+  useEffect(() => {
+    if (isAdmin) api.get('/users/telecallers').then((d) => setTelecallers(d.users || [])).catch(() => {});
+  }, [isAdmin]);
+
+  const assign = async (id, assignedTo) => {
+    setError('');
+    try {
+      await api.patch(`/teachers/${id}/assign`, { assigned_to: assignedTo || null });
+      setTeachers((prev) => prev.map((x) => (x.id === id ? { ...x, assigned_to: assignedTo || null } : x)));
+    } catch (e) {
+      setError(e.message);
+    }
+  };
   const [params, setParams] = useSearchParams();
   const subject = params.get('subject') || '';
+  const klass = params.get('class') || '';
+  const regParam = params.get('registration') || '';
+  const followupTitle = regParam === 'registered'
+    ? 'Registration Followup — Teachers'
+    : regParam === 'unregistered'
+    ? 'Unregistration Followup — Teachers'
+    : 'Teachers';
+
+  // Apply the registration filter when opened from a sidebar follow-up link.
+  useEffect(() => { setRegistration(regParam); }, [regParam]);
 
   const load = useCallback(async () => {
     setError('');
@@ -31,15 +57,17 @@ export default function Teachers() {
       if (status) q.set('status', status);
       if (search) q.set('search', search);
       if (subject) q.set('subject', subject);
+      if (klass) q.set('class', klass);
       if (registration) q.set('registration', registration);
       if (stateF) q.set('state', stateF);
       if (cityF) q.set('city', cityF);
+      if (countryF) q.set('country', countryF);
       const { teachers } = await api.get(`/teachers?${q.toString()}`);
       setTeachers(teachers);
     } catch (e) {
       setError(e.message);
     }
-  }, [status, search, subject, registration, stateF, cityF]);
+  }, [status, search, subject, registration, stateF, cityF, countryF]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -53,9 +81,16 @@ export default function Teachers() {
     }
   };
 
+
   const clearSubject = () => {
     const next = new URLSearchParams(params);
     next.delete('subject');
+    setParams(next);
+  };
+
+  const clearClass = () => {
+    const next = new URLSearchParams(params);
+    next.delete('class');
     setParams(next);
   };
 
@@ -63,7 +98,7 @@ export default function Teachers() {
     <div>
       <div className="page-head">
         <div>
-          <h2>Teachers</h2>
+          <h2>{followupTitle}</h2>
           <p className="muted">{teachers.length} shown</p>
         </div>
         <div className="head-actions">
@@ -72,15 +107,17 @@ export default function Teachers() {
         </div>
       </div>
 
-      <DirectoryOverview
-        type="teachers"
-        filters={{ search, registration, state: stateF, city: cityF }}
-      />
-
       {subject && (
         <div className="active-filter">
           Showing subject: <strong>{subject}</strong>
           <button className="chip-clear" onClick={clearSubject} aria-label="Clear subject filter">✕</button>
+        </div>
+      )}
+
+      {klass && (
+        <div className="active-filter">
+          Showing class: <strong>{klass}</strong>
+          <button className="chip-clear" onClick={clearClass} aria-label="Clear class filter">✕</button>
         </div>
       )}
 
@@ -112,6 +149,13 @@ export default function Teachers() {
           </select>
         </label>
         <label className="filter">
+          <span>Country</span>
+          <select value={countryF} onChange={(e) => setCountryF(e.target.value)}>
+            <option value="">Country</option>
+            {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </label>
+        <label className="filter">
           <span>State</span>
           <select value={stateF} onChange={(e) => setStateF(e.target.value)}>
             <option value="">State</option>
@@ -128,12 +172,17 @@ export default function Teachers() {
         <div className="filter-actions">
           <button
             className="btn-ghost"
-            onClick={() => { setSearch(''); setStatus(''); setRegistration(''); setStateF(''); setCityF(''); }}
+            onClick={() => { setSearch(''); setStatus(''); setRegistration(''); setCountryF(''); setStateF(''); setCityF(''); }}
           >
             Reset
           </button>
         </div>
       </div>
+
+      <DirectoryOverview
+        type="teachers"
+        filters={{ search, registration, country: countryF, state: stateF, city: cityF }}
+      />
 
       {error && <div className="alert">{error}</div>}
 
@@ -169,7 +218,16 @@ export default function Teachers() {
               <div className="rf"><span className="rf-label">Registration</span><span className="rf-value">{t.registration || '—'}</span></div>
               <div className="rf block"><span className="rf-label">Note</span><span className="rf-value">{t.note || '—'}</span></div>
             </div>
-            <ContactActions phone={t.phone} email={t.email} registration={t.registration} onRegistrationChange={(v) => setReg(t.id, v)} />
+            {isAdmin && (
+              <div className="assign-row">
+                <span className="rf-label">Assign to</span>
+                <select value={t.assigned_to || ''} onChange={(e) => assign(t.id, e.target.value)}>
+                  <option value="">Unassigned</option>
+                  {telecallers.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                </select>
+              </div>
+            )}
+            <ContactActions type="teachers" id={t.id} registration={t.registration} onRegistrationChange={(v) => setReg(t.id, v)} />
           </div>
         ))}
         {teachers.length === 0 && <div className="record-empty">No teachers found.</div>}

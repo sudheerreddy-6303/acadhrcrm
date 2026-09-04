@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { COURSES, SUBJECTS } from './FieldControls';
 
@@ -8,9 +9,32 @@ import { COURSES, SUBJECTS } from './FieldControls';
 export default function DirectoryOverview({ type, filters = {} }) {
   const [dir, setDir] = useState(null);
   const [subjects, setSubjects] = useState(null);
+  const [params, setParams] = useSearchParams();
+  const activeSubject = params.get('subject') || '';
+  const activeClass = params.get('class') || '';
+
+  // Clicking a Courses/Subjects card filters the list below by that subject
+  // (the Teachers/Tutors pages already read ?subject= and query the backend).
+  // Clicking the active one again clears it.
+  const filterBySubject = (name) => {
+    const next = new URLSearchParams(params);
+    if (activeSubject === name) next.delete('subject');
+    else next.set('subject', name);
+    setParams(next);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Clicking a Classes card filters the list by that class (?class=).
+  const filterByClass = (name) => {
+    const next = new URLSearchParams(params);
+    if (activeClass === name) next.delete('class');
+    else next.set('class', name);
+    setParams(next);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const [classes, setClasses] = useState(null);
 
-  const { search = '', registration = '', state = '', city = '' } = filters;
+  const { search = '', registration = '', country = '', state = '', city = '' } = filters;
 
   useEffect(() => {
     let ok = true;
@@ -21,6 +45,7 @@ export default function DirectoryOverview({ type, filters = {} }) {
         if (search) q.set('search', search);
         if (registration) q.set('registration', registration);
         if (state) q.set('state', state);
+        if (country) q.set('country', country);
         if (city) q.set('city', city);
         const qs = q.toString();
         const subjQs = new URLSearchParams(qs);
@@ -39,7 +64,7 @@ export default function DirectoryOverview({ type, filters = {} }) {
       }
     })();
     return () => { ok = false; };
-  }, [type, search, registration, state, city]);
+  }, [type, search, registration, country, state, city]);
 
   if (!dir) return null;
 
@@ -49,10 +74,10 @@ export default function DirectoryOverview({ type, filters = {} }) {
     ...SUBJECTS.filter((s) => !COURSES.includes(s)),
     ...Object.keys(subjects || {}).filter((k) => !COURSES.includes(k)),
   ]));
-  const classKeys = Array.from(new Set([
-    '6th', '7th', '8th', '9th', '10th', '11th', '12th',
-    ...Object.keys(classes || {}),
-  ]));
+  // Show the class values that actually exist in the data. (Previously this was
+  // seeded with a fixed 6th–12th list, which duplicated the real values that use
+  // a different naming like "Class 10" / "NEET" / "JEE".)
+  const classKeys = Array.from(new Set(Object.keys(classes || {})));
 
   return (
     <div className="dir-overview">
@@ -74,30 +99,48 @@ export default function DirectoryOverview({ type, filters = {} }) {
           <h3 className="section-title">Courses</h3>
           <div className="subject-grid">
             {courseKeys.map((s) => (
-              <div key={s} className="subject-card">
+              <button
+                key={s}
+                type="button"
+                className={`subject-card as-button ${activeSubject === s ? 'active' : ''}`}
+                onClick={() => filterBySubject(s)}
+                title={`Show ${type} for ${s}`}
+              >
                 <div className="subject-count">{subjects[s] || 0}</div>
                 <div className="subject-name">{s}</div>
-              </div>
+              </button>
             ))}
           </div>
 
           <h3 className="section-title mt-lg">Subjects</h3>
           <div className="subject-grid">
             {subjectKeys.map((s) => (
-              <div key={s} className="subject-card">
+              <button
+                key={s}
+                type="button"
+                className={`subject-card as-button ${activeSubject === s ? 'active' : ''}`}
+                onClick={() => filterBySubject(s)}
+                title={`Show ${type} for ${s}`}
+              >
                 <div className="subject-count">{subjects[s] || 0}</div>
                 <div className="subject-name">{s}</div>
-              </div>
+              </button>
             ))}
           </div>
 
           <h3 className="section-title mt-lg">Classes</h3>
           <div className="subject-grid">
             {classKeys.map((s) => (
-              <div key={s} className="subject-card">
+              <button
+                key={s}
+                type="button"
+                className={`subject-card as-button ${activeClass === s ? 'active' : ''}`}
+                onClick={() => filterByClass(s)}
+                title={`Show ${type} for ${s}`}
+              >
                 <div className="subject-count">{classes[s] || 0}</div>
                 <div className="subject-name">{s}</div>
-              </div>
+              </button>
             ))}
           </div>
         </>

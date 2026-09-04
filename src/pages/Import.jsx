@@ -98,9 +98,14 @@ export default function Import() {
     if (!analysis || !analysis.toImport.length) return;
     setImporting(true); setError('');
     try {
-      const { imported } = await api.post('/leads/import', { type, rows: analysis.toImport });
-      setDone(`Imported ${imported} ${type} — added to Leads and shown as unregistered in ${type}. Redirecting…`);
-      setTimeout(() => navigate(`/${type}`), 1400);
+      const { imported, warning } = await api.post('/leads/import', { type, rows: analysis.toImport });
+      if (warning) {
+        // Rows reached Leads but not the directory table — don't pretend it worked.
+        setError(warning);
+      } else {
+        setDone(`Imported ${imported} ${type} — added to Leads and shown as unregistered in ${type}. Redirecting…`);
+        setTimeout(() => navigate(`/${type}`), 1400);
+      }
     } catch (err) {
       setError(err.message || 'Import failed');
     } finally {

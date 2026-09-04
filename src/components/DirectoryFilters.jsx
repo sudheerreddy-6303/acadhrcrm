@@ -1,10 +1,10 @@
-import { INDIAN_STATES, CITIES } from './FieldControls';
+import { INDIAN_STATES, CITIES, COUNTRIES } from './FieldControls';
 
-// Dashboard-style filter bar: Search + Status + Registration + State + City + Reset.
-// `value` is { search, status, registration, state, city }; `onChange` gets the next value.
+// Dashboard-style filter bar: Search + Status + Registration + Country + State + City + Reset.
+// `value` is { search, status, registration, country, state, city }; `onChange` gets the next value.
 export default function DirectoryFilters({ value, onChange, showStatus = true }) {
   const set = (k) => (e) => onChange({ ...value, [k]: e.target.value });
-  const reset = () => onChange({ search: '', status: '', registration: '', state: '', city: '' });
+  const reset = () => onChange({ search: '', status: '', registration: '', country: '', state: '', city: '' });
 
   return (
     <div className="filter-bar">
@@ -34,6 +34,13 @@ export default function DirectoryFilters({ value, onChange, showStatus = true })
           <option value="">Registration</option>
           <option value="registered">Registered</option>
           <option value="unregistered">Unregistered</option>
+        </select>
+      </label>
+      <label className="filter">
+        <span>Country</span>
+        <select value={value.country || ''} onChange={set('country')}>
+          <option value="">Country</option>
+          {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </label>
       <label className="filter">

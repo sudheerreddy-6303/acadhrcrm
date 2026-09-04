@@ -1,22 +1,21 @@
-import { useState, useId } from 'react';
+import { useId } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-// Normalize a phone number for wa.me (digits only; prepend 91 for 10-digit Indian numbers).
-function waNumber(phone) {
-  const d = String(phone || '').replace(/\D/g, '');
-  if (!d) return '';
-  return d.length === 10 ? `91${d}` : d;
-}
-
-// Card footer: Register/Unregister radios on the left, a Contact button on the
-// right that expands to Call / WhatsApp / Mail actions.
-export default function ContactActions({ phone, email, registration, onRegistrationChange }) {
-  const [open, setOpen] = useState(false);
+// Card footer: Register/Unregister radios on the left, a Follow up button on the
+// right that opens the full-page follow-up view for this record.
+export default function ContactActions({ type, id, registration, onRegistrationChange }) {
+  const navigate = useNavigate();
   const name = useId();
-  const wa = waNumber(phone);
 
   return (
     <div className="contact-block">
-      <div className="card-foot">
+      <div className="card-foot" style={{ justifyContent: 'flex-end' }}>
+        {/*
+          Register / Unregister radios removed from this card by request.
+          Registration can still be changed on the Follow-up page (which has its
+          own toggle), so no capability is lost. Kept here (commented) so it can
+          be restored easily if needed.
+
         <div className="reg-toggle">
           <label className={`reg-opt ${registration === 'registered' ? 'on' : ''}`}>
             <input
@@ -37,25 +36,12 @@ export default function ContactActions({ phone, email, registration, onRegistrat
             Unregister
           </label>
         </div>
+        */}
 
-        <button className="btn-contact compact" onClick={() => setOpen((o) => !o)}>
-          {open ? 'Hide' : 'Contact'}
+        <button className="btn-contact compact" onClick={() => navigate(`/followup/${type}/${id}`)}>
+          Follow up
         </button>
       </div>
-
-      {open && (
-        <div className="contact-actions">
-          {phone
-            ? <a className="ca ca-call" href={`tel:${phone}`}>Call</a>
-            : <span className="ca ca-off">Call</span>}
-          {wa
-            ? <a className="ca ca-wa" href={`https://wa.me/${wa}`} target="_blank" rel="noreferrer">WhatsApp</a>
-            : <span className="ca ca-off">WhatsApp</span>}
-          {email
-            ? <a className="ca ca-mail" href={`mailto:${email}`}>Mail</a>
-            : <span className="ca ca-off">Mail</span>}
-        </div>
-      )}
     </div>
   );
 }

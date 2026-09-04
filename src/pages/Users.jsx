@@ -35,7 +35,7 @@ export default function Users() {
       <div className="page-head">
         <div>
           <h2>Users</h2>
-          <p className="muted">Admins and telecallers</p>
+          <p className="muted">Admins and AcadHrs</p>
         </div>
         <button className="btn-primary" onClick={() => setEditing({ ...EMPTY })}>+ New user</button>
       </div>
@@ -52,7 +52,7 @@ export default function Users() {
               <tr key={u.id}>
                 <td data-label="Name"><strong>{u.name}</strong></td>
                 <td data-label="Email">{u.email}</td>
-                <td data-label="Role"><span className={`badge r-${u.role}`}>{u.role}</span></td>
+                <td data-label="Role"><span className={`badge r-${u.role}`}>{u.role === 'telecaller' ? 'AcadHr' : u.role}</span></td>
                 <td data-label="Status">
                   <span className={`badge ${u.is_active ? 's-converted' : 's-lost'}`}>
                     {u.is_active ? 'Active' : 'Disabled'}
@@ -130,7 +130,7 @@ function UserModal({ user, onClose, onSaved }) {
           </label>
           <label className="field"><span>Role</span>
             <select value={form.role} onChange={set('role')}>
-              <option value="telecaller">Telecaller</option>
+              <option value="telecaller">AcadHr</option>
               <option value="admin">Admin</option>
             </select>
           </label>

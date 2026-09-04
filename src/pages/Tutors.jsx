@@ -15,11 +15,36 @@ export default function Tutors() {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [tutors, setTutors] = useState([]);
-  const [f, setF] = useState({ search: '', status: '', registration: '', state: '', city: '' });
+  const [f, setF] = useState({ search: '', status: '', registration: '', country: '', state: '', city: '' });
   const [error, setError] = useState('');
+  const [telecallers, setTelecallers] = useState([]);
+
+  useEffect(() => {
+    if (isAdmin) api.get('/users/telecallers').then((d) => setTelecallers(d.users || [])).catch(() => {});
+  }, [isAdmin]);
+
+  const assign = async (id, assignedTo) => {
+    setError('');
+    try {
+      await api.patch(`/tutors/${id}/assign`, { assigned_to: assignedTo || null });
+      setTutors((prev) => prev.map((x) => (x.id === id ? { ...x, assigned_to: assignedTo || null } : x)));
+    } catch (e) {
+      setError(e.message);
+    }
+  };
   const [adding, setAdding] = useState(false);
   const [params, setParams] = useSearchParams();
   const subject = params.get('subject') || '';
+  const klass = params.get('class') || '';
+  const regParam = params.get('registration') || '';
+  const followupTitle = regParam === 'registered'
+    ? 'Registration Followup — Tutors'
+    : regParam === 'unregistered'
+    ? 'Unregistration Followup — Tutors'
+    : 'Tutors';
+
+  // Apply the registration filter when opened from a sidebar follow-up link.
+  useEffect(() => { setF((prev) => ({ ...prev, registration: regParam })); }, [regParam]);
 
   const load = useCallback(async () => {
     setError('');
@@ -30,13 +55,15 @@ export default function Tutors() {
       if (f.registration) q.set('registration', f.registration);
       if (f.state) q.set('state', f.state);
       if (f.city) q.set('city', f.city);
+      if (f.country) q.set('country', f.country);
       if (subject) q.set('subject', subject);
+      if (klass) q.set('class', klass);
       const { tutors } = await api.get(`/tutors?${q.toString()}`);
       setTutors(tutors);
     } catch (e) {
       setError(e.message);
     }
-  }, [f, subject]);
+  }, [f, subject, klass]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -50,9 +77,16 @@ export default function Tutors() {
     }
   };
 
+
   const clearSubject = () => {
     const next = new URLSearchParams(params);
     next.delete('subject');
+    setParams(next);
+  };
+
+  const clearClass = () => {
+    const next = new URLSearchParams(params);
+    next.delete('class');
     setParams(next);
   };
 
@@ -60,7 +94,7 @@ export default function Tutors() {
     <div>
       <div className="page-head">
         <div>
-          <h2>Tutors</h2>
+          <h2>{followupTitle}</h2>
           <p className="muted">{tutors.length} shown</p>
         </div>
         <div className="head-actions">
@@ -69,11 +103,6 @@ export default function Tutors() {
         </div>
       </div>
 
-      <DirectoryOverview
-        type="tutors"
-        filters={{ search: f.search, registration: f.registration, state: f.state, city: f.city }}
-      />
-
       {subject && (
         <div className="active-filter">
           Showing subject: <strong>{subject}</strong>
@@ -81,7 +110,19 @@ export default function Tutors() {
         </div>
       )}
 
+      {klass && (
+        <div className="active-filter">
+          Showing class: <strong>{klass}</strong>
+          <button className="chip-clear" onClick={clearClass} aria-label="Clear class filter">✕</button>
+        </div>
+      )}
+
       <DirectoryFilters value={f} onChange={setF} />
+
+      <DirectoryOverview
+        type="tutors"
+        filters={{ search: f.search, registration: f.registration, country: f.country, state: f.state, city: f.city }}
+      />
 
       {error && <div className="alert">{error}</div>}
 
@@ -115,7 +156,16 @@ export default function Tutors() {
               <div className="rf"><span className="rf-label">State</span><span className="rf-value">{t.state || '—'}</span></div>
               <div className="rf"><span className="rf-label">Registration</span><span className="rf-value">{t.registration || '—'}</span></div>
             </div>
-            <ContactActions phone={t.phone} email={t.email} registration={t.registration} onRegistrationChange={(v) => setReg(t.id, v)} />
+            {isAdmin && (
+              <div className="assign-row">
+                <span className="rf-label">Assign to</span>
+                <select value={t.assigned_to || ''} onChange={(e) => assign(t.id, e.target.value)}>
+                  <option value="">Unassigned</option>
+                  {telecallers.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                </select>
+              </div>
+            )}
+            <ContactActions type="tutors" id={t.id} registration={t.registration} onRegistrationChange={(v) => setReg(t.id, v)} />
           </div>
         ))}
         {tutors.length === 0 && <div className="record-empty">No tutors found.</div>}

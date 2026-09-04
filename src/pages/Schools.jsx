@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import ContactActions from '../components/ContactActions';
@@ -13,9 +13,34 @@ export default function Schools() {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [schools, setSchools] = useState([]);
-  const [f, setF] = useState({ search: '', status: '', registration: '', state: '', city: '' });
+  const [f, setF] = useState({ search: '', status: '', registration: '', country: '', state: '', city: '' });
   const [error, setError] = useState('');
+  const [telecallers, setTelecallers] = useState([]);
+
+  useEffect(() => {
+    if (isAdmin) api.get('/users/telecallers').then((d) => setTelecallers(d.users || [])).catch(() => {});
+  }, [isAdmin]);
+
+  const assign = async (id, assignedTo) => {
+    setError('');
+    try {
+      await api.patch(`/schools/${id}/assign`, { assigned_to: assignedTo || null });
+      setSchools((prev) => prev.map((x) => (x.id === id ? { ...x, assigned_to: assignedTo || null } : x)));
+    } catch (e) {
+      setError(e.message);
+    }
+  };
   const [adding, setAdding] = useState(false);
+  const [params] = useSearchParams();
+  const regParam = params.get('registration') || '';
+  const followupTitle = regParam === 'registered'
+    ? 'Registration Followup — Schools / Institutions'
+    : regParam === 'unregistered'
+    ? 'Unregistration Followup — Schools / Institutions'
+    : 'Schools / Institutions';
+
+  // Apply the registration filter when opened from a sidebar follow-up link.
+  useEffect(() => { setF((prev) => ({ ...prev, registration: regParam })); }, [regParam]);
 
   const load = useCallback(async () => {
     setError('');
@@ -26,6 +51,7 @@ export default function Schools() {
       if (f.registration) q.set('registration', f.registration);
       if (f.state) q.set('state', f.state);
       if (f.city) q.set('city', f.city);
+      if (f.country) q.set('country', f.country);
       const { schools } = await api.get(`/schools?${q.toString()}`);
       setSchools(schools);
     } catch (e) {
@@ -45,11 +71,12 @@ export default function Schools() {
     }
   };
 
+
   return (
     <div>
       <div className="page-head">
         <div>
-          <h2>Schools / Institutions</h2>
+          <h2>{followupTitle}</h2>
           <p className="muted">{schools.length} shown</p>
         </div>
         <div className="head-actions">
@@ -58,12 +85,12 @@ export default function Schools() {
         </div>
       </div>
 
+      <DirectoryFilters value={f} onChange={setF} />
+
       <DirectoryOverview
         type="schools"
-        filters={{ search: f.search, registration: f.registration, state: f.state, city: f.city }}
+        filters={{ search: f.search, registration: f.registration, country: f.country, state: f.state, city: f.city }}
       />
-
-      <DirectoryFilters value={f} onChange={setF} />
 
       {error && <div className="alert">{error}</div>}
 
@@ -105,7 +132,16 @@ export default function Schools() {
               <div className="rf"><span className="rf-label">Registration</span><span className="rf-value">{s.registration || '—'}</span></div>
               <div className="rf block"><span className="rf-label">Note</span><span className="rf-value">{s.note || '—'}</span></div>
             </div>
-            <ContactActions phone={s.phone} email={s.email} registration={s.registration} onRegistrationChange={(v) => setReg(s.id, v)} />
+            {isAdmin && (
+              <div className="assign-row">
+                <span className="rf-label">Assign to</span>
+                <select value={s.assigned_to || ''} onChange={(e) => assign(s.id, e.target.value)}>
+                  <option value="">Unassigned</option>
+                  {telecallers.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                </select>
+              </div>
+            )}
+            <ContactActions type="schools" id={s.id} registration={s.registration} onRegistrationChange={(v) => setReg(s.id, v)} />
           </div>
         ))}
         {schools.length === 0 && <div className="record-empty">No schools found.</div>}

@@ -76,3 +76,9 @@ export const CITIES = [
   'Bengaluru', 'Chennai', 'Mumbai', 'Pune', 'Delhi', 'Kolkata',
   'Ahmedabad', 'Jaipur', 'Lucknow', 'Kochi', 'Coimbatore', 'Nagpur', 'Indore', 'Bhopal',
 ];
+
+// Countries you operate in — India first as the default market.
+export const COUNTRIES = [
+  'India', 'United States', 'United Kingdom', 'United Arab Emirates',
+  'Canada', 'Australia', 'Singapore', 'Saudi Arabia', 'Qatar',
+];
