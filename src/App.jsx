@@ -13,10 +13,10 @@ import FollowUpPage from './pages/FollowUpPage';
 import Import from './pages/Import';
 import ImportAssign from './pages/ImportAssign';
 import FetchTutors from './pages/FetchTutors';
-<<<<<<< HEAD
-=======
+// <<<<<<< HEAD
+// =======
 import FetchTeachers from './pages/FetchTeachers';
->>>>>>> 96a6c55 (added the chages in the unregsiter teacher follow up)
+// >>>>>>> 96a6c55 (added the chages in the unregsiter teacher follow up)
 import AcadHrs from './pages/AcadHrs';
 import Users from './pages/Users';
 import Toast from './components/Toast';
@@ -53,8 +53,8 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-<<<<<<< HEAD
-=======
+{/* <<<<<<< HEAD */}
+{/* ======= */}
             <Route
               path="/fetch-teachers"
               element={
@@ -63,7 +63,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
->>>>>>> 96a6c55 (added the chages in the unregsiter teacher follow up)
+{/* >>>>>>> 96a6c55 (added the chages in the unregsiter teacher follow up) */}
             <Route
               path="/acadhrs"
               element={
