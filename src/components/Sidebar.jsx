@@ -16,16 +16,30 @@ const IMPORT_ASSIGN_CHILD = { label: 'Import & Assign', importAssign: true };
 
 // Admin-only sub-item under Tutors: pull tutors from the AcadHr database.
 const FETCH_ACADHR_CHILD = { label: 'Fetch from AcadHr', to: '/fetch-tutors', linkChild: true };
+<<<<<<< HEAD
+=======
+// Admin-only sub-item under Teachers: pull teachers from the AcadHr database.
+const FETCH_ACADHR_TEACHERS_CHILD = { label: 'Fetch from AcadHr', to: '/fetch-teachers', linkChild: true };
+>>>>>>> 96a6c55 (added the chages in the unregsiter teacher follow up)
 
 // Followup children + Import & Assign, for sections that support importing.
 const CHILDREN_WITH_IMPORT = [...FOLLOWUP_CHILDREN, IMPORT_ASSIGN_CHILD];
 // Tutors additionally get the "Fetch from AcadHr" link.
 const TUTOR_CHILDREN = [...FOLLOWUP_CHILDREN, IMPORT_ASSIGN_CHILD, FETCH_ACADHR_CHILD];
+<<<<<<< HEAD
+=======
+// Teachers additionally get their own "Fetch from AcadHr" link.
+const TEACHER_CHILDREN = [...FOLLOWUP_CHILDREN, IMPORT_ASSIGN_CHILD, FETCH_ACADHR_TEACHERS_CHILD];
+>>>>>>> 96a6c55 (added the chages in the unregsiter teacher follow up)
 
 const NAV = [
   { to: '/dashboard', label: 'Dashboard', icon: '▤' },
   { to: '/leads', label: 'Leads', icon: '☎' },
+<<<<<<< HEAD
   { key: 'teachers', to: '/teachers', label: 'Teachers', icon: '✎', children: CHILDREN_WITH_IMPORT },
+=======
+  { key: 'teachers', to: '/teachers', label: 'Teachers', icon: '✎', children: TEACHER_CHILDREN },
+>>>>>>> 96a6c55 (added the chages in the unregsiter teacher follow up)
   { key: 'tutors', to: '/tutors', label: 'Tutors', icon: '◎', children: TUTOR_CHILDREN },
   { key: 'schools', to: '/schools', label: 'Schools', icon: '⌂', children: CHILDREN_WITH_IMPORT },
   { key: 'tuitions', to: '/tuitions', label: 'Tuitions', icon: '✐', children: FOLLOWUP_CHILDREN },
