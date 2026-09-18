@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import ContactActions from '../components/ContactActions';
 import DirectoryOverview from '../components/DirectoryOverview';
 import {
-  ChipMultiSelect, SUBJECTS, BOARDS, CLASSES, EXPERIENCE, INDIAN_STATES, CITIES, COUNTRIES,
+  ChipMultiSelect, SUBJECTS, BOARDS, CLASSES, EXPERIENCE, LEADERSHIP, INDIAN_STATES, CITIES, COUNTRIES,
 } from '../components/FieldControls';
 
 const STATUS_LABEL = { active: 'Active', pending: 'Pending', inactive: 'Inactive' };
@@ -212,6 +212,7 @@ export default function Teachers() {
               <div className="rf"><span className="rf-label">Boards</span><span className="rf-value">{t.boards || '—'}</span></div>
               <div className="rf"><span className="rf-label">Classes</span><span className="rf-value">{t.classes || '—'}</span></div>
               <div className="rf"><span className="rf-label">Experience</span><span className="rf-value">{t.experience || '—'}</span></div>
+              <div className="rf"><span className="rf-label">Leadership</span><span className="rf-value">{t.leadership || '—'}</span></div>
               <div className="rf"><span className="rf-label">City</span><span className="rf-value">{t.city || '—'}</span></div>
               <div className="rf"><span className="rf-label">State</span><span className="rf-value">{t.state || '—'}</span></div>
               <div className="rf"><span className="rf-label">Previous school/college</span><span className="rf-value">{t.previous_institution || '—'}</span></div>
@@ -244,7 +245,7 @@ export default function Teachers() {
 
 const EMPTY = {
   name: '', phone: '', email: '', city: '', state: '',
-  subjects: [], boards: [], classes: [], experience: '',
+  subjects: [], boards: [], classes: [], experience: '', leadership: '',
   registration: 'registered', note: '', previous_institution: '',
 };
 
@@ -304,6 +305,12 @@ function TeacherForm({ onClose, onSaved }) {
               <select value={form.experience} onChange={set('experience')}>
                 <option value="">Select…</option>
                 {EXPERIENCE.map((x) => <option key={x} value={x}>{x}</option>)}
+              </select>
+            </label>
+            <label className="field"><span>Leadership</span>
+              <select value={form.leadership} onChange={set('leadership')}>
+                <option value="">Select…</option>
+                {LEADERSHIP.map((x) => <option key={x} value={x}>{x}</option>)}
               </select>
             </label>
           </div>

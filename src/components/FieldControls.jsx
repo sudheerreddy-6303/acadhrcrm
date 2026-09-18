@@ -14,11 +14,18 @@ export const SUBJECTS = [
 ];
 
 // Entrance/competitive tracks shown separately from regular subjects.
-export const COURSES = ['NEET', 'JEE', 'IPMAT', 'Foundation'];
+export const COURSES = ['NEET', 'JEE', 'IPMAT', 'Foundation', 'Boards', 'Tuitions'];
 export const BOARDS = ['CBSE', 'ICSE', 'State Board', 'IGCSE', 'IB'];
 export const CLASSES = ['Class 1-5', 'Class 6-8', 'Class 9-10', 'Class 11-12', 'UG / Degree'];
 export const TIMINGS = ['Morning', 'Afternoon', 'Evening', 'Night', 'Weekends'];
 export const EXPERIENCE = ['0-1 years', '1-3 years', '3-5 years', '5-10 years', '10+ years'];
+
+// Leadership / administrative roles a teacher may hold.
+export const LEADERSHIP = [
+  'Principal', 'Vice Principal', 'Headmaster', 'Headmistress',
+  'Academic Head', 'Academic Coordinator', 'Head of Department (HOD)',
+  'Coordinator', 'Dean', 'Director', 'Administrator',
+];
 
 // Clickable chip multi-select. When `max` is set, unselected chips disable
 // once the limit is reached (e.g. subjects/boards/classes are capped at 3).
