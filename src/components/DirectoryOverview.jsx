@@ -50,6 +50,9 @@ export default function DirectoryOverview({ type, filters = {} }) {
         const qs = q.toString();
         const subjQs = new URLSearchParams(qs);
         subjQs.delete('type'); // subjects endpoint returns both maps; we pick by type
+        // The list below shows only teachers/tutors, so don't count leads in
+        // the Courses/Subjects cards here — the count then matches the list.
+        subjQs.set('noleads', '1');
         const [d, s, c] = await Promise.all([
           api.get(`/dashboard/directory?${qs}`),
           api.get(`/dashboard/subjects?${subjQs.toString()}`),

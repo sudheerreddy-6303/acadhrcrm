@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import LocationFields from '../components/LocationFields';
 import ContactActions from '../components/ContactActions';
 import DirectoryOverview from '../components/DirectoryOverview';
 import {
@@ -14,6 +15,9 @@ export default function Teachers() {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [teachers, setTeachers] = useState([]);
+  // true while the list is being fetched, so we show "Loading…" instead of "No teachers found".
+  const [loading, setLoading] = useState(true);
+  const loadSeq = useRef(0);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [registration, setRegistration] = useState('');
@@ -52,6 +56,8 @@ export default function Teachers() {
 
   const load = useCallback(async () => {
     setError('');
+    const seq = ++loadSeq.current; // ignore replies from older requests
+    setLoading(true);
     try {
       const q = new URLSearchParams();
       if (status) q.set('status', status);
@@ -63,11 +69,13 @@ export default function Teachers() {
       if (cityF) q.set('city', cityF);
       if (countryF) q.set('country', countryF);
       const { teachers } = await api.get(`/teachers?${q.toString()}`);
-      setTeachers(teachers);
+      if (seq === loadSeq.current) setTeachers(teachers);
     } catch (e) {
-      setError(e.message);
+      if (seq === loadSeq.current) setError(e.message);
+    } finally {
+      if (seq === loadSeq.current) setLoading(false);
     }
-  }, [status, search, subject, registration, stateF, cityF, countryF]);
+  }, [status, search, subject, klass, registration, stateF, cityF, countryF]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -99,7 +107,7 @@ export default function Teachers() {
       <div className="page-head">
         <div>
           <h2>{followupTitle}</h2>
-          <p className="muted">{teachers.length} shown</p>
+          <p className="muted">{loading ? 'Loading…' : `${teachers.length} shown`}</p>
         </div>
         <div className="head-actions">
           <button className="btn-ghost" onClick={() => navigate('/import?type=teachers')}>⭳ Import</button>
@@ -215,6 +223,8 @@ export default function Teachers() {
               <div className="rf"><span className="rf-label">Leadership</span><span className="rf-value">{t.leadership || '—'}</span></div>
               <div className="rf"><span className="rf-label">City</span><span className="rf-value">{t.city || '—'}</span></div>
               <div className="rf"><span className="rf-label">State</span><span className="rf-value">{t.state || '—'}</span></div>
+              <div className="rf"><span className="rf-label">Country</span><span className="rf-value">{t.country || '—'}</span></div>
+              <div className="rf"><span className="rf-label">Pincode</span><span className="rf-value">{t.pincode || '—'}</span></div>
               <div className="rf"><span className="rf-label">Previous school/college</span><span className="rf-value">{t.previous_institution || '—'}</span></div>
               <div className="rf"><span className="rf-label">Registration</span><span className="rf-value">{t.registration || '—'}</span></div>
               <div className="rf block"><span className="rf-label">Note</span><span className="rf-value">{t.note || '—'}</span></div>
@@ -231,7 +241,10 @@ export default function Teachers() {
             <ContactActions type="teachers" id={t.id} registration={t.registration} onRegistrationChange={(v) => setReg(t.id, v)} />
           </div>
         ))}
-        {teachers.length === 0 && <div className="record-empty">No teachers found.</div>}
+        {loading && teachers.length === 0 && (
+          <div className="record-empty">Loading teachers…</div>
+        )}
+        {!loading && teachers.length === 0 && <div className="record-empty">No teachers found.</div>}
       </div>
 
       {adding && (
@@ -244,9 +257,9 @@ export default function Teachers() {
 // ---------------------------------------------------------------------------
 
 const EMPTY = {
-  name: '', phone: '', email: '', city: '', state: '',
+  name: '', phone: '', email: '', country: 'India', state: '', city: '', pincode: '',
   subjects: [], boards: [], classes: [], experience: '', leadership: '',
-  registration: 'registered', note: '', previous_institution: '',
+  registration: 'unregistered', note: '', previous_institution: '',
 };
 
 function TeacherForm({ onClose, onSaved }) {
@@ -261,6 +274,11 @@ function TeacherForm({ onClose, onSaved }) {
     setError('');
     if (!form.name || !form.phone || !form.city || !form.state) {
       return setError('Name, phone, city and state are required.');
+    }
+    if (!form.country) return setError('Please select a country.');
+    if (!form.pincode) return setError('Pincode is required.');
+    if (form.country === 'India' && !/^\d{6}$/.test(form.pincode)) {
+      return setError('Please enter a valid 6-digit pincode.');
     }
     if (form.subjects.length === 0) return setError('Please select at least one subject.');
     if (form.boards.length === 0) return setError('Please select at least one board.');
@@ -280,7 +298,7 @@ function TeacherForm({ onClose, onSaved }) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop">{/* closes only via ✕ or Cancel — clicking outside no longer closes the form */}
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <h3>Add teacher</h3>
@@ -297,10 +315,10 @@ function TeacherForm({ onClose, onSaved }) {
               <input value={form.phone} onChange={set('phone')} /></label>
             <label className="field"><span>Gmail ID</span>
               <input value={form.email} onChange={set('email')} placeholder="name@gmail.com" /></label>
-            <label className="field"><span>City *</span>
-              <input value={form.city} onChange={set('city')} /></label>
-            <label className="field"><span>State *</span>
-              <input value={form.state} onChange={set('state')} /></label>
+            <LocationFields form={form} setForm={setForm} />
+            <label className="field"><span>Pincode *</span>
+              <input value={form.pincode} onChange={(e) => setForm((f) => ({ ...f, pincode: e.target.value.replace(/[^0-9A-Za-z -]/g, '') }))}
+                inputMode="numeric" maxLength={10} placeholder="e.g. 500081" /></label>
             <label className="field"><span>Experience *</span>
               <select value={form.experience} onChange={set('experience')}>
                 <option value="">Select…</option>
@@ -330,19 +348,6 @@ function TeacherForm({ onClose, onSaved }) {
           <label className="field mt"><span>Note</span>
             <textarea rows={3} value={form.note} onChange={set('note')} /></label>
 
-          <div className="field mt"><span>Registration *</span></div>
-          <div className="radio-row">
-            <label className={`radio ${form.registration === 'registered' ? 'on' : ''}`}>
-              <input type="radio" name="treg" checked={form.registration === 'registered'}
-                onChange={() => setForm((f) => ({ ...f, registration: 'registered' }))} />
-              Register
-            </label>
-            <label className={`radio ${form.registration === 'unregistered' ? 'on' : ''}`}>
-              <input type="radio" name="treg" checked={form.registration === 'unregistered'}
-                onChange={() => setForm((f) => ({ ...f, registration: 'unregistered' }))} />
-              Unregister
-            </label>
-          </div>
         </div>
 
         <div className="modal-foot">

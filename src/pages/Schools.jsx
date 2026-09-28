@@ -1,11 +1,12 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import LocationFields from '../components/LocationFields';
 import ContactActions from '../components/ContactActions';
 import DirectoryOverview from '../components/DirectoryOverview';
 import DirectoryFilters from '../components/DirectoryFilters';
-import { INDIAN_STATES, CITIES } from '../components/FieldControls';
+import { INDIAN_STATES, CITIES, COUNTRIES } from '../components/FieldControls';
 
 const STATUS_LABEL = { active: 'Active', pending: 'Pending', inactive: 'Inactive' };
 
@@ -13,6 +14,9 @@ export default function Schools() {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [schools, setSchools] = useState([]);
+  // true while the list is being fetched, so we show "Loading…" instead of "No schools found".
+  const [loading, setLoading] = useState(true);
+  const loadSeq = useRef(0);
   const [f, setF] = useState({ search: '', status: '', registration: '', country: '', state: '', city: '' });
   const [error, setError] = useState('');
   const [telecallers, setTelecallers] = useState([]);
@@ -44,6 +48,8 @@ export default function Schools() {
 
   const load = useCallback(async () => {
     setError('');
+    const seq = ++loadSeq.current; // ignore replies from older requests
+    setLoading(true);
     try {
       const q = new URLSearchParams();
       if (f.status) q.set('status', f.status);
@@ -53,9 +59,11 @@ export default function Schools() {
       if (f.city) q.set('city', f.city);
       if (f.country) q.set('country', f.country);
       const { schools } = await api.get(`/schools?${q.toString()}`);
-      setSchools(schools);
+      if (seq === loadSeq.current) setSchools(schools);
     } catch (e) {
-      setError(e.message);
+      if (seq === loadSeq.current) setError(e.message);
+    } finally {
+      if (seq === loadSeq.current) setLoading(false);
     }
   }, [f]);
 
@@ -77,7 +85,7 @@ export default function Schools() {
       <div className="page-head">
         <div>
           <h2>{followupTitle}</h2>
-          <p className="muted">{schools.length} shown</p>
+          <p className="muted">{loading ? 'Loading…' : `${schools.length} shown`}</p>
         </div>
         <div className="head-actions">
           <button className="btn-ghost" onClick={() => navigate('/import?type=schools')}>⭳ Import</button>
@@ -129,6 +137,8 @@ export default function Schools() {
               )}
               <div className="rf"><span className="rf-label">City</span><span className="rf-value">{s.city || '—'}</span></div>
               <div className="rf"><span className="rf-label">State</span><span className="rf-value">{s.state || '—'}</span></div>
+              <div className="rf"><span className="rf-label">Country</span><span className="rf-value">{s.country || '—'}</span></div>
+              <div className="rf"><span className="rf-label">Pincode</span><span className="rf-value">{s.pincode || '—'}</span></div>
               <div className="rf"><span className="rf-label">Registration</span><span className="rf-value">{s.registration || '—'}</span></div>
               <div className="rf block"><span className="rf-label">Note</span><span className="rf-value">{s.note || '—'}</span></div>
             </div>
@@ -144,7 +154,10 @@ export default function Schools() {
             <ContactActions type="schools" id={s.id} registration={s.registration} onRegistrationChange={(v) => setReg(s.id, v)} />
           </div>
         ))}
-        {schools.length === 0 && <div className="record-empty">No schools found.</div>}
+        {loading && schools.length === 0 && (
+          <div className="record-empty">Loading schools…</div>
+        )}
+        {!loading && schools.length === 0 && <div className="record-empty">No schools found.</div>}
       </div>
 
       {adding && (
@@ -157,11 +170,11 @@ export default function Schools() {
 // ---------------------------------------------------------------------------
 
 const EMPTY = {
-  name: '', location: '', state: '', city: '',
+  name: '', location: '', country: 'India', state: '', city: '', pincode: '',
   school_email: '', school_number: '',
   contact_person: '', phone: '', email: '', designation: '',
   contact_person2: '', phone2: '', email2: '', designation2: '',
-  registration: 'registered', note: '',
+  registration: 'unregistered', note: '',
 };
 
 function SchoolForm({ onClose, onSaved }) {
@@ -177,6 +190,11 @@ function SchoolForm({ onClose, onSaved }) {
         !form.contact_person || !form.phone || !form.email || !form.designation) {
       return setError('Please fill all required (*) fields.');
     }
+    if (!form.country) return setError('Please select a country.');
+    if (!form.pincode) return setError('Pincode is required.');
+    if (form.country === 'India' && !/^\d{6}$/.test(form.pincode)) {
+      return setError('Please enter a valid 6-digit pincode.');
+    }
     setBusy(true);
     try {
       await api.post('/schools', form);
@@ -189,7 +207,7 @@ function SchoolForm({ onClose, onSaved }) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop">{/* closes only via ✕ or Cancel — clicking outside no longer closes the form */}
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <h3>Add school</h3>
@@ -205,18 +223,10 @@ function SchoolForm({ onClose, onSaved }) {
             <label className="field"><span>Location *</span>
               <input value={form.location} onChange={set('location')} placeholder="Area / landmark" /></label>
 
-            <label className="field"><span>State *</span>
-              <select value={form.state} onChange={set('state')}>
-                <option value="">Select state…</option>
-                {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </label>
-            <label className="field"><span>City *</span>
-              <select value={form.city} onChange={set('city')}>
-                <option value="">Select city…</option>
-                {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </label>
+            <LocationFields form={form} setForm={setForm} />
+            <label className="field"><span>Pincode *</span>
+              <input value={form.pincode} onChange={(e) => setForm((f) => ({ ...f, pincode: e.target.value.replace(/[^0-9A-Za-z -]/g, '') }))}
+                inputMode="numeric" maxLength={10} placeholder="e.g. 500081" /></label>
 
             <label className="field"><span>School mail ID</span>
               <input value={form.school_email} onChange={set('school_email')} placeholder="school@example.com" /></label>
@@ -247,19 +257,6 @@ function SchoolForm({ onClose, onSaved }) {
               <input value={form.designation2} onChange={set('designation2')} placeholder="Vice Principal, Admin…" /></label>
           </div>
 
-          <div className="field mt"><span>Registration *</span></div>
-          <div className="radio-row">
-            <label className={`radio ${form.registration === 'registered' ? 'on' : ''}`}>
-              <input type="radio" name="sreg" checked={form.registration === 'registered'}
-                onChange={() => setForm((f) => ({ ...f, registration: 'registered' }))} />
-              Register
-            </label>
-            <label className={`radio ${form.registration === 'unregistered' ? 'on' : ''}`}>
-              <input type="radio" name="sreg" checked={form.registration === 'unregistered'}
-                onChange={() => setForm((f) => ({ ...f, registration: 'unregistered' }))} />
-              Unregister
-            </label>
-          </div>
 
           <label className="field mt"><span>Note</span>
             <textarea rows={3} value={form.note} onChange={set('note')} /></label>

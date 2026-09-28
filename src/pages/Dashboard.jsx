@@ -66,7 +66,9 @@ export default function Dashboard() {
 
     (async () => {
       try {
-        const q = isClass ? '' : `?subject=${encodeURIComponent(chooser)}`;
+        // Classes are filtered on the server too (it understands "9-10",
+        // "Secondary (9–10)", "All Grades", ... the same way the cards count them).
+        const q = isClass ? `?class=${encodeURIComponent(chooser)}` : `?subject=${encodeURIComponent(chooser)}`;
         // Subject/Course card counts also include matching leads (their
         // `requirement`), so fetch those too — otherwise a subject whose count
         // comes only from leads opens an empty modal. Classes aren't counted
@@ -80,12 +82,7 @@ export default function Dashboard() {
         let teachers = td.teachers || [];
         let tutors = ud.tutors || [];
         let leads = (ld && ld.leads) || [];
-        if (isClass) {
-          const hasClass = (row) =>
-            String(row.classes || '').split(',').map((s) => s.trim()).includes(chooser);
-          teachers = teachers.filter(hasClass);
-          tutors = tutors.filter(hasClass);
-        }
+        // (class filtering is now done by the server via ?class= above)
         if (!cancelled) setResults({ teachers, tutors, leads, loading: false, error: '' });
       } catch (e) {
         if (!cancelled) setResults({ teachers: [], tutors: [], leads: [], loading: false, error: e.message });

@@ -1,12 +1,13 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import LocationFields from '../components/LocationFields';
 import ContactActions from '../components/ContactActions';
 import DirectoryOverview from '../components/DirectoryOverview';
 import DirectoryFilters from '../components/DirectoryFilters';
 import {
-  ChipMultiSelect, SUBJECTS, BOARDS, CLASSES, TIMINGS,
+  ChipMultiSelect, SUBJECTS, BOARDS, CLASSES, TIMINGS, COUNTRIES,
 } from '../components/FieldControls';
 
 const STATUS_LABEL = { active: 'Active', pending: 'Pending', inactive: 'Inactive' };
@@ -15,6 +16,9 @@ export default function Tutors() {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [tutors, setTutors] = useState([]);
+  // true while the list is being fetched, so we show "Loading…" instead of "No tutors found".
+  const [loading, setLoading] = useState(true);
+  const loadSeq = useRef(0);
   const [f, setF] = useState({ search: '', status: '', registration: '', country: '', state: '', city: '' });
   const [error, setError] = useState('');
   const [telecallers, setTelecallers] = useState([]);
@@ -48,6 +52,8 @@ export default function Tutors() {
 
   const load = useCallback(async () => {
     setError('');
+    const seq = ++loadSeq.current; // ignore replies from older requests
+    setLoading(true);
     try {
       const q = new URLSearchParams();
       if (f.status) q.set('status', f.status);
@@ -59,9 +65,11 @@ export default function Tutors() {
       if (subject) q.set('subject', subject);
       if (klass) q.set('class', klass);
       const { tutors } = await api.get(`/tutors?${q.toString()}`);
-      setTutors(tutors);
+      if (seq === loadSeq.current) setTutors(tutors);
     } catch (e) {
-      setError(e.message);
+      if (seq === loadSeq.current) setError(e.message);
+    } finally {
+      if (seq === loadSeq.current) setLoading(false);
     }
   }, [f, subject, klass]);
 
@@ -95,7 +103,7 @@ export default function Tutors() {
       <div className="page-head">
         <div>
           <h2>{followupTitle}</h2>
-          <p className="muted">{tutors.length} shown</p>
+          <p className="muted">{loading ? 'Loading…' : `${tutors.length} shown`}</p>
         </div>
         <div className="head-actions">
           <button className="btn-ghost" onClick={() => navigate('/import?type=tutors')}>⭳ Import</button>
@@ -154,6 +162,8 @@ export default function Tutors() {
               <div className="rf"><span className="rf-label">Timing</span><span className="rf-value">{t.timing || '—'}</span></div>
               <div className="rf"><span className="rf-label">City</span><span className="rf-value">{t.city || '—'}</span></div>
               <div className="rf"><span className="rf-label">State</span><span className="rf-value">{t.state || '—'}</span></div>
+              <div className="rf"><span className="rf-label">Country</span><span className="rf-value">{t.country || '—'}</span></div>
+              <div className="rf"><span className="rf-label">Pincode</span><span className="rf-value">{t.pincode || '—'}</span></div>
               <div className="rf"><span className="rf-label">Registration</span><span className="rf-value">{t.registration || '—'}</span></div>
             </div>
             {isAdmin && (
@@ -168,7 +178,10 @@ export default function Tutors() {
             <ContactActions type="tutors" id={t.id} registration={t.registration} onRegistrationChange={(v) => setReg(t.id, v)} />
           </div>
         ))}
-        {tutors.length === 0 && <div className="record-empty">No tutors found.</div>}
+        {loading && tutors.length === 0 && (
+          <div className="record-empty">Loading tutors…</div>
+        )}
+        {!loading && tutors.length === 0 && <div className="record-empty">No tutors found.</div>}
       </div>
 
       {adding && (
@@ -181,8 +194,8 @@ export default function Tutors() {
 // ---------------------------------------------------------------------------
 
 const EMPTY = {
-  name: '', phone: '', email: '', city: '', state: '',
-  subjects: [], boards: [], classes: [], timing: [], registration: 'registered',
+  name: '', phone: '', email: '', country: 'India', state: '', city: '', pincode: '',
+  subjects: [], boards: [], classes: [], timing: [], registration: 'unregistered',
 };
 
 function TutorForm({ onClose, onSaved }) {
@@ -197,6 +210,11 @@ function TutorForm({ onClose, onSaved }) {
     setError('');
     if (!form.name || !form.phone || !form.city || !form.state) {
       return setError('Name, phone, city and state are required.');
+    }
+    if (!form.country) return setError('Please select a country.');
+    if (!form.pincode) return setError('Pincode is required.');
+    if (form.country === 'India' && !/^\d{6}$/.test(form.pincode)) {
+      return setError('Please enter a valid 6-digit pincode.');
     }
     if (form.subjects.length === 0) return setError('Please select at least one subject.');
     if (form.boards.length === 0) return setError('Please select at least one board.');
@@ -215,7 +233,7 @@ function TutorForm({ onClose, onSaved }) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop">{/* closes only via ✕ or Cancel — clicking outside no longer closes the form */}
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <h3>Add tutor</h3>
@@ -232,10 +250,10 @@ function TutorForm({ onClose, onSaved }) {
               <input value={form.phone} onChange={set('phone')} /></label>
             <label className="field"><span>Gmail ID</span>
               <input value={form.email} onChange={set('email')} placeholder="name@gmail.com" /></label>
-            <label className="field"><span>City *</span>
-              <input value={form.city} onChange={set('city')} /></label>
-            <label className="field"><span>State *</span>
-              <input value={form.state} onChange={set('state')} /></label>
+            <LocationFields form={form} setForm={setForm} />
+            <label className="field"><span>Pincode *</span>
+              <input value={form.pincode} onChange={(e) => setForm((f) => ({ ...f, pincode: e.target.value.replace(/[^0-9A-Za-z -]/g, '') }))}
+                inputMode="numeric" maxLength={10} placeholder="e.g. 500081" /></label>
           </div>
 
           <div className="field"><span>Subject * (choose up to 3)</span></div>
@@ -250,19 +268,6 @@ function TutorForm({ onClose, onSaved }) {
           <div className="field mt"><span>Timing * (choose any)</span></div>
           <ChipMultiSelect options={TIMINGS} value={form.timing} onChange={setVal('timing')} />
 
-          <div className="field mt"><span>Registration *</span></div>
-          <div className="radio-row">
-            <label className={`radio ${form.registration === 'registered' ? 'on' : ''}`}>
-              <input type="radio" name="reg" checked={form.registration === 'registered'}
-                onChange={() => setForm((f) => ({ ...f, registration: 'registered' }))} />
-              Register
-            </label>
-            <label className={`radio ${form.registration === 'unregistered' ? 'on' : ''}`}>
-              <input type="radio" name="reg" checked={form.registration === 'unregistered'}
-                onChange={() => setForm((f) => ({ ...f, registration: 'unregistered' }))} />
-              Unregister
-            </label>
-          </div>
         </div>
 
         <div className="modal-foot">
