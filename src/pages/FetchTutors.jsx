@@ -36,34 +36,61 @@ export default function FetchTutors() {
           .map((r) => String(r.phone || '').replace(/\D/g, '').slice(-10))
           .filter((p) => p.length === 10)
       )];
-      let existing = new Set();
+      // Check against BOTH the Tutors page and Leads. A tutor that is in Leads
+      // but not on the Tutors page came from an earlier import that failed half
+      // way — those get restored to the Tutors page instead of being skipped.
+      let inTutors = new Set();
+      let inLeads = new Set();
       if (phones.length) {
-        const d = await api.post('/leads/check-duplicates', { phones });
-        existing = new Set(d.existing || []);
+        try {
+          const d = await api.post('/acadhr-sync/tutors/existing', { phones });
+          inTutors = new Set(d.inTutors || []);
+          inLeads = new Set(d.inLeads || []);
+        } catch (_) {
+          // older backend without /tutors/existing — fall back to the Leads check
+          const d = await api.post('/leads/check-duplicates', { phones });
+          inTutors = new Set(d.existing || []);
+        }
       }
       const seen = new Set();
-      const report = { total: f.rows.length, willImport: 0, dupBatch: 0, dupDb: 0, noPhone: 0 };
+      const report = { total: (f.rows || []).length, willImport: 0, dupBatch: 0, dupDb: 0, noPhone: 0, restore: 0 };
       const toImport = [];
-      for (const r of f.rows) {
+      const toRestore = [];
+      for (const r of f.rows || []) {
         const p = String(r.phone || '').replace(/\D/g, '').slice(-10);
         if (p.length !== 10) { report.noPhone++; continue; }
         if (seen.has(p)) { report.dupBatch++; continue; }
         seen.add(p);
-        if (existing.has(p)) { report.dupDb++; continue; }
+        if (inTutors.has(p)) { report.dupDb++; continue; }
+        if (inLeads.has(p)) { report.restore++; toRestore.push(r); continue; }
         report.willImport++;
         toImport.push(r);
       }
-      setAnalysis({ report, toImport });
+      setAnalysis({ report, toImport, toRestore });
     } catch (e) { setError(e.message); } finally { setBusy(''); }
   };
 
   const runImport = async () => {
-    if (!analysis || !analysis.toImport.length) return;
+    const toRestore = (analysis && analysis.toRestore) || [];
+    if (!analysis || (!analysis.toImport.length && !toRestore.length)) return;
     setBusy('import'); setError('');
     try {
-      const res = await api.post('/leads/import', { type: 'tutors', rows: analysis.toImport, registration: 'registered' });
-      if (res.warning) setError(res.warning);
-      else setImported({ count: res.imported });
+      let count = 0;
+      let warning = '';
+      // Send in batches so thousands of tutors don't hit request-size/time limits.
+      const BATCH = 500;
+      for (let i = 0; i < analysis.toImport.length; i += BATCH) {
+        const res = await api.post('/leads/import', { type: 'tutors', rows: analysis.toImport.slice(i, i + BATCH), registration: 'registered' });
+        if (res.warning) warning = res.warning;
+        count += Number(res.imported) || 0;
+      }
+      let restored = 0;
+      for (let i = 0; i < toRestore.length; i += BATCH) {
+        const r = await api.post('/acadhr-sync/tutors/restore', { rows: toRestore.slice(i, i + BATCH) });
+        restored += Number(r.restored) || 0;
+      }
+      if (warning) setError(warning);
+      else setImported({ count, restored });
     } catch (e) { setError(e.message); } finally { setBusy(''); }
   };
 
@@ -88,7 +115,7 @@ export default function FetchTutors() {
       {status && status.reachable && (
         <>
           <p className="muted">
-            Found <strong>{status.tutorCount}</strong> tutor(s) in <code>{status.sourceDb}.tutors</code>.
+            Found <strong>{status.tutorCount}</strong> tutor(s) in <code>{status.sourceDb}.{status.table || 'tutors'}</code>.
             Imported tutors appear in the <strong>Tutors</strong> list under <strong>Registration Followup</strong> (registered).
           </p>
 
@@ -134,9 +161,14 @@ export default function FetchTutors() {
                 <div className="stat-card"><div className="stat-num">{analysis.report.dupDb}</div><div className="stat-label">Already in CRM</div></div>
                 <div className="stat-card"><div className="stat-num">{analysis.report.dupBatch}</div><div className="stat-label">Duplicates in batch</div></div>
                 <div className="stat-card"><div className="stat-num">{analysis.report.noPhone}</div><div className="stat-label">No valid phone</div></div>
+                {analysis.report.restore > 0 && (
+                  <div className="stat-card"><div className="stat-num">{analysis.report.restore}</div><div className="stat-label">In Leads, missing from Tutors</div></div>
+                )}
               </div>
-              <button className="btn-primary" onClick={runImport} disabled={busy === 'import' || analysis.report.willImport === 0}>
-                {busy === 'import' ? 'Importing…' : `Import ${analysis.report.willImport} into Tutors`}
+              <button className="btn-primary" onClick={runImport} disabled={busy === 'import' || (analysis.report.willImport + (analysis.report.restore || 0)) === 0}>
+                {busy === 'import'
+                  ? 'Importing…'
+                  : `Import ${analysis.report.willImport + (analysis.report.restore || 0)} into Tutors`}
               </button>
             </>
           )}
@@ -145,6 +177,7 @@ export default function FetchTutors() {
           {imported && (
             <div className="import-ok" style={{ marginTop: 14 }}>
               Imported <strong>{imported.count}</strong> tutor(s) into the CRM under Registration Followup.
+              {imported.restored > 0 && <> Also added <strong>{imported.restored}</strong> tutor(s) that were in Leads but missing from the Tutors page.</>}
               <div style={{ marginTop: 10 }}>
                 <button className="btn-primary" onClick={() => navigate('/tutors?registration=registered')}>
                   View in Tutors

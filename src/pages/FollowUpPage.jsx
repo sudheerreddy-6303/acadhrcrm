@@ -70,9 +70,15 @@ const FIELDS = {
     ['school_number', 'School number'], ['contact_person2', '2nd contact'], ['phone2', '2nd phone'],
     ['city', 'City'], ['state', 'State'], ['note', 'Note'],
   ],
+  tuitions: [
+    ['phone', 'Phone'], ['email', 'Email'], ['student_name', 'Student'], ['subjects', 'Subjects'],
+    ['classes', 'Class'], ['boards', 'Board'], ['mode', 'Mode'], ['timing', 'Timing'],
+    ['budget', 'Budget'], ['gender_pref', 'Tutor gender'], ['location', 'Area'], ['city', 'City'],
+    ['state', 'State'], ['acadhr_status', 'AcadHr status'], ['requirement', 'Details'],
+  ],
 };
 
-const TYPE_LABEL = { teachers: 'Teacher', tutors: 'Tutor', schools: 'School' };
+const TYPE_LABEL = { teachers: 'Teacher', tutors: 'Tutor', schools: 'School', tuitions: 'Tuition' };
 
 // School subscription tiers — from the acadhr.com pricing page (For Schools).
 const PLAN_OPTS = [
@@ -189,8 +195,41 @@ const TEACHER_PLAN_OPTS = [
   },
 ];
 
+// Parent subscription tiers — from the acadhr.com pricing page (For Parents).
+// Used on the Tuitions follow-up (a tuition is posted by a parent).
+const PARENT_PLAN_OPTS = [
+  {
+    value: 'inaugural', label: 'Inaugural Offer', price: 'Free', note: 'Limited launch offer',
+    badge: 'Launch Offer', tone: 'free',
+    features: [
+      'Post 1 tuition request',
+      'View tutor profiles',
+      'Academic updates',
+      '20 free credits',
+    ],
+  },
+  {
+    value: 'starter', label: 'Starter', price: '₹1,000', note: '+ GST / month', featured: true,
+    features: [
+      '2–3 tuition requests',
+      'Access tutor profiles',
+      '60 unlock credits',
+    ],
+  },
+  {
+    value: 'premium', label: 'Premium', price: '₹2,000', note: '+ GST / month',
+    features: [
+      '4–5 tuition requests',
+      '100 unlock credits',
+      'Dedicated recruiter support',
+      'Demo class scheduling',
+      'One month dedicated support',
+    ],
+  },
+];
+
 // Which plan set to show per record type.
-const PLAN_SETS = { schools: PLAN_OPTS, tutors: TUTOR_PLAN_OPTS, teachers: TEACHER_PLAN_OPTS };
+const PLAN_SETS = { schools: PLAN_OPTS, tutors: TUTOR_PLAN_OPTS, teachers: TEACHER_PLAN_OPTS, tuitions: PARENT_PLAN_OPTS };
 
 function waNumber(phone) {
   const d = String(phone || '').replace(/\D/g, '');
@@ -244,7 +283,7 @@ export default function FollowUpPage() {
   const [job, setJob] = useState({ demo: '', interview: '', hired: '', description: '' });
   const [savingJob, setSavingJob] = useState(false);
 
-  const valid = ['teachers', 'tutors', 'schools'].includes(type);
+  const valid = ['teachers', 'tutors', 'schools', 'tuitions'].includes(type);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -325,7 +364,7 @@ export default function FollowUpPage() {
   const isSchool = type === 'schools';
   const planOpts = PLAN_SETS[type] || null;
   // Schools and tutors log "Customer feedback"; teachers log call "Remarks".
-  const usesFeedback = type === 'schools' || type === 'tutors';
+  const usesFeedback = type === 'schools' || type === 'tutors' || type === 'tuitions';
   const feedbackLabel = usesFeedback ? 'Customer feedback' : 'Remarks';
   const feedbackPlaceholder = usesFeedback ? 'Customer feedback…' : 'What happened on this call…';
 

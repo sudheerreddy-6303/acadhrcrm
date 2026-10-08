@@ -14,6 +14,7 @@ import Import from './pages/Import';
 import ImportAssign from './pages/ImportAssign';
 import FetchTutors from './pages/FetchTutors';
 import FetchTeachers from './pages/FetchTeachers';
+import FetchTuitions from './pages/FetchTuitions';
 import AcadHrs from './pages/AcadHrs';
 import Users from './pages/Users';
 import Toast from './components/Toast';
@@ -55,6 +56,14 @@ export default function App() {
               element={
                 <ProtectedRoute adminOnly>
                   <FetchTeachers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/fetch-tuitions"
+              element={
+                <ProtectedRoute adminOnly>
+                  <FetchTuitions />
                 </ProtectedRoute>
               }
             />

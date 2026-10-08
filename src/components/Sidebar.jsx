@@ -19,6 +19,10 @@ const FETCH_ACADHR_CHILD = { label: 'Fetch from AcadHr', to: '/fetch-tutors', li
 // Admin-only sub-item under Teachers: pull teachers from the AcadHr database.
 const FETCH_ACADHR_TEACHERS_CHILD = { label: 'Fetch from AcadHr', to: '/fetch-teachers', linkChild: true };
 
+// Admin-only sub-item under Tuitions: pull tuition requirements from AcadHr.
+const FETCH_ACADHR_TUITIONS_CHILD = { label: 'Fetch from AcadHr', to: '/fetch-tuitions', linkChild: true };
+const TUITION_CHILDREN = [...FOLLOWUP_CHILDREN, FETCH_ACADHR_TUITIONS_CHILD];
+
 // Followup children + Import & Assign, for sections that support importing.
 const CHILDREN_WITH_IMPORT = [...FOLLOWUP_CHILDREN, IMPORT_ASSIGN_CHILD];
 // Tutors additionally get the "Fetch from AcadHr" link.
@@ -32,7 +36,7 @@ const NAV = [
   { key: 'teachers', to: '/teachers', label: 'Teachers', icon: '✎', children: TEACHER_CHILDREN },
   { key: 'tutors', to: '/tutors', label: 'Tutors', icon: '◎', children: TUTOR_CHILDREN },
   { key: 'schools', to: '/schools', label: 'Schools', icon: '⌂', children: CHILDREN_WITH_IMPORT },
-  { key: 'tuitions', to: '/tuitions', label: 'Tuitions', icon: '✐', children: FOLLOWUP_CHILDREN },
+  { key: 'tuitions', to: '/tuitions', label: 'Tuitions', icon: '✐', children: TUITION_CHILDREN },
   { to: '/acadhrs', label: 'AcadHrs', icon: '☏', adminOnly: true },
   { to: '/users', label: 'Users', icon: '⚙', adminOnly: true },
 ];
