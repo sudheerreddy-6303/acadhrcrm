@@ -31,7 +31,7 @@ export default function DirectoryFilters({ value, onChange, showStatus = true })
       <label className="filter">
         <span>Registration</span>
         <select value={value.registration} onChange={set('registration')}>
-          <option value="">Registration</option>
+          <option value="">All</option>
           <option value="registered">Registered</option>
           <option value="unregistered">Unregistered</option>
         </select>

@@ -15,8 +15,13 @@ import ImportAssign from './pages/ImportAssign';
 import FetchTutors from './pages/FetchTutors';
 import FetchTeachers from './pages/FetchTeachers';
 import FetchTuitions from './pages/FetchTuitions';
+import FetchSchools from './pages/FetchSchools';
 import AcadHrs from './pages/AcadHrs';
 import Users from './pages/Users';
+import BusinessAssociates from './pages/BusinessAssociates';
+import BusinessAssociateFormPage from './pages/BusinessAssociateFormPage';
+import WhatsAppMeta from './pages/WhatsAppMeta';
+import WhatsAppBulk from './pages/WhatsAppBulk';
 import Toast from './components/Toast';
 
 export default function App() {
@@ -40,6 +45,11 @@ export default function App() {
             <Route path="/tutors" element={<Tutors />} />
             <Route path="/schools" element={<Schools />} />
             <Route path="/tuitions" element={<Tuitions />} />
+            <Route path="/business-associates" element={<BusinessAssociates />} />
+            <Route path="/business-associates/new" element={<BusinessAssociateFormPage />} />
+            <Route path="/business-associates/:id/edit" element={<BusinessAssociateFormPage />} />
+            <Route path="/whatsapp/meta" element={<WhatsAppMeta />} />
+            <Route path="/whatsapp/bulk" element={<WhatsAppBulk />} />
             <Route path="/followup/:type/:id" element={<FollowUpPage />} />
             <Route path="/import" element={<Import />} />
             <Route path="/import-assign" element={<ImportAssign />} />
@@ -56,6 +66,14 @@ export default function App() {
               element={
                 <ProtectedRoute adminOnly>
                   <FetchTeachers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/fetch-schools"
+              element={
+                <ProtectedRoute adminOnly>
+                  <FetchSchools />
                 </ProtectedRoute>
               }
             />

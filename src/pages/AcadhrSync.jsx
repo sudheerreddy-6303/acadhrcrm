@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '../api/client';
+import Loader from '../components/Loader';
 
 // Where fetched rows should land in the CRM.
 const TARGETS = [
@@ -215,7 +216,7 @@ export default function AcadhrSync() {
               </div>
               <div style={{ marginTop: 10, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button className="btn-ghost" onClick={runPreview} disabled={busy === 'preview'}>
-                  {busy === 'preview' ? 'Loading…' : 'Preview mapping'}
+                  {busy === 'preview' ? <Loader size="sm" inline label="Loading…" /> : 'Preview mapping'}
                 </button>
                 <button className="btn-primary" onClick={runFetch} disabled={busy === 'fetch'}>
                   {busy === 'fetch' ? 'Fetching…' : 'Fetch & check'}

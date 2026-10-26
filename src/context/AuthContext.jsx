@@ -16,6 +16,8 @@ export function AuthProvider({ children }) {
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(USER_KEY, JSON.stringify(u));
     setUser(u);
+    // Popup: signed in.
+    try { window.dispatchEvent(new CustomEvent('app:toast', { detail: { message: `Welcome, ${(u && u.name) || 'back'}!`, type: 'success' } })); } catch (_) { /* ignore */ }
     return u;
   }, []);
 
@@ -23,6 +25,8 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     setUser(null);
+    // Popup: signed out.
+    try { window.dispatchEvent(new CustomEvent('app:toast', { detail: { message: 'Signed out', type: 'success' } })); } catch (_) { /* ignore */ }
   }, []);
 
   const isAdmin = user?.role === 'admin';

@@ -6,9 +6,12 @@ import LocationFields from '../components/LocationFields';
 import ContactActions from '../components/ContactActions';
 import DirectoryOverview from '../components/DirectoryOverview';
 import DirectoryFilters from '../components/DirectoryFilters';
+import TutorRegisterForm from '../components/TutorRegisterForm';
+import TutorDocuments from '../components/TutorDocuments';
 import {
   ChipMultiSelect, SUBJECTS, BOARDS, CLASSES, TIMINGS, COUNTRIES,
 } from '../components/FieldControls';
+import Loader from '../components/Loader';
 
 const STATUS_LABEL = { active: 'Active', pending: 'Pending', inactive: 'Inactive' };
 
@@ -103,7 +106,7 @@ export default function Tutors() {
       <div className="page-head">
         <div>
           <h2>{followupTitle}</h2>
-          <p className="muted">{loading ? 'Loading…' : `${tutors.length} shown`}</p>
+          <p className="muted">{loading ? <Loader size="sm" inline label="Loading…" /> : `${tutors.length} shown`}</p>
         </div>
         <div className="head-actions">
           <button className="btn-ghost" onClick={() => navigate('/import?type=tutors')}>⭳ Import</button>
@@ -160,12 +163,24 @@ export default function Tutors() {
               <div className="rf"><span className="rf-label">Boards</span><span className="rf-value">{t.boards || '—'}</span></div>
               <div className="rf"><span className="rf-label">Classes</span><span className="rf-value">{t.classes || '—'}</span></div>
               <div className="rf"><span className="rf-label">Timing</span><span className="rf-value">{t.timing || '—'}</span></div>
+              <div className="rf"><span className="rf-label">Qualification</span><span className="rf-value">{t.qualification || '—'}</span></div>
+              <div className="rf"><span className="rf-label">Experience</span><span className="rf-value">{t.experience || '—'}</span></div>
+              <div className="rf"><span className="rf-label">Hourly charges</span><span className="rf-value">{t.hourly_charges || '—'}</span></div>
+              <div className="rf"><span className="rf-label">Gender</span><span className="rf-value">{t.gender || '—'}</span></div>
+              <div className="rf"><span className="rf-label">Teaching mode</span><span className="rf-value">{t.teaching_mode || '—'}</span></div>
+              <div className="rf"><span className="rf-label">Location</span><span className="rf-value">{t.location || '—'}</span></div>
               <div className="rf"><span className="rf-label">City</span><span className="rf-value">{t.city || '—'}</span></div>
               <div className="rf"><span className="rf-label">State</span><span className="rf-value">{t.state || '—'}</span></div>
               <div className="rf"><span className="rf-label">Country</span><span className="rf-value">{t.country || '—'}</span></div>
               <div className="rf"><span className="rf-label">Pincode</span><span className="rf-value">{t.pincode || '—'}</span></div>
               <div className="rf"><span className="rf-label">Registration</span><span className="rf-value">{t.registration || '—'}</span></div>
+              {t.address && <div className="rf block"><span className="rf-label">Address</span><span className="rf-value">{t.address}</span></div>}
+              {t.class_link && <div className="rf block"><span className="rf-label">Class link</span><span className="rf-value"><a href={t.class_link} target="_blank" rel="noreferrer">{t.class_link}</a></span></div>}
+              {t.demo_link && <div className="rf block"><span className="rf-label">Demo class link</span><span className="rf-value"><a href={t.demo_link} target="_blank" rel="noreferrer">{t.demo_link}</a></span></div>}
+              {t.bio && <div className="rf block"><span className="rf-label">About</span><span className="rf-value">{t.bio}</span></div>}
             </div>
+            {/* Photo + resume (tutors added with the acadhr.com-style form) */}
+            {Number(t.terms_accepted) === 1 && <TutorDocuments id={t.id} compact />}
             {isAdmin && (
               <div className="assign-row">
                 <span className="rf-label">Assign to</span>
@@ -179,13 +194,13 @@ export default function Tutors() {
           </div>
         ))}
         {loading && tutors.length === 0 && (
-          <div className="record-empty">Loading tutors…</div>
+          <div className="record-empty"><Loader label="Loading tutors…" /></div>
         )}
         {!loading && tutors.length === 0 && <div className="record-empty">No tutors found.</div>}
       </div>
 
       {adding && (
-        <TutorForm onClose={() => setAdding(false)} onSaved={() => { setAdding(false); load(); }} />
+        <TutorRegisterForm onClose={() => setAdding(false)} onSaved={() => { setAdding(false); load(); }} />
       )}
     </div>
   );

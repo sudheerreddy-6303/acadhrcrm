@@ -33,6 +33,13 @@ export default function DirectoryOverview({ type, filters = {} }) {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   const [classes, setClasses] = useState(null);
+  // Re-load the counts when a record is added (fired after "Add teacher" saves).
+  const [refreshTick, setRefreshTick] = useState(0);
+  useEffect(() => {
+    const onRefresh = () => setRefreshTick((t) => t + 1);
+    window.addEventListener('app:directory-refresh', onRefresh);
+    return () => window.removeEventListener('app:directory-refresh', onRefresh);
+  }, []);
 
   const { search = '', registration = '', country = '', state = '', city = '' } = filters;
 
@@ -67,7 +74,7 @@ export default function DirectoryOverview({ type, filters = {} }) {
       }
     })();
     return () => { ok = false; };
-  }, [type, search, registration, country, state, city]);
+  }, [type, search, registration, country, state, city, refreshTick]);
 
   if (!dir) return null;
 

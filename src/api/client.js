@@ -27,8 +27,37 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
 
   if (!res.ok) {
     const err = new Error((data && data.message) || 'Request failed');
+    // Global error popup for any failed request (the success popup is below).
+    try {
+      window.dispatchEvent(new CustomEvent('app:toast', {
+        detail: {
+          message: res.status === 401 && !path.startsWith('/auth')
+            ? 'Session expired — please sign in again'
+            : (data && data.message) || 'Something went wrong. Please try again.',
+          type: 'error',
+        },
+      }));
+    } catch (_) {
+      /* non-browser env — ignore */
+    }
     err.status = res.status;
     throw err;
+  }
+
+  // Read-only POST calls (fetching from AcadHr, duplicate checks) don't save
+  // anything, so they must not show a "Saved" popup.
+  if (method === 'POST' && /\/(fetch|check-duplicates|existing|preview)$/.test(path.split('?')[0])) {
+    return data;
+  }
+
+  // The auto-sync on/off switch shows its own clearer popup ("Auto-sync turned ON/OFF").
+  if (method === 'PATCH' && path === '/acadhr-sync/auto') {
+    return data;
+  }
+
+  // Choosing a plan shows its own detailed popup ("Plan set: Premium · 3 months · ₹5,400").
+  if (method === 'PATCH' && path === '/plans/select') {
+    return data;
   }
 
   // Global "Saved" popup for any successful mutation (skip reads and login).

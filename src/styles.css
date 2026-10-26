@@ -882,3 +882,222 @@ button.status-chip-card { display: block; text-align: center; }
   flex: 1; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
   font-size: 13.5px; font-family: inherit; background: #fff;
 }
+
+/* ---------------- Sidebar scroll ----------------
+   When the menu is taller than the screen (e.g. a group like Tutors is
+   expanded), the menu list scrolls; the logo stays at the top and the
+   user / Sign out block stays at the bottom. */
+.sidebar { overflow: hidden; }
+.sidebar-brand, .sidebar-foot { flex-shrink: 0; }
+.sidebar-nav {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  margin-right: -6px;          /* keep items aligned while the scrollbar shows */
+  padding-right: 6px;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+.sidebar-nav > * { flex-shrink: 0; }
+.sidebar-nav::-webkit-scrollbar { width: 6px; }
+.sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22); border-radius: 6px; }
+.sidebar-nav::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.35); }
+.sidebar-foot { padding-bottom: 2px; }
+
+/* ---------------- Info popup (calling / opening WhatsApp) ---------------- */
+.toast-info { background: #2563eb; }
+.toast-info .toast-icon { background: rgba(255, 255, 255, 0.25); }
+.toast-info .toast-icon { font-size: 0; }
+.toast-info .toast-icon::after { content: 'i'; font-size: 13px; font-weight: 800; }
+
+/* ---------------- Popup visibility fix ----------------
+   Bootstrap (imported in main.jsx) also has a ".toast" class and hides it
+   unless it has ".show" (.toast:not(.show) { display: none }). That made the
+   app's popups invisible. These higher-specificity rules keep our popups
+   visible and undo Bootstrap's toast width / border / translucent styling. */
+.toast-wrap > .toast,
+.toast-wrap > .toast:not(.show) {
+  display: flex;
+  width: auto;
+  max-width: min(440px, calc(100vw - 32px));
+  border: 0;
+  color: #fff;
+  font-size: 14px;
+  pointer-events: auto;
+  background-clip: border-box;
+}
+.toast-wrap > .toast.toast-success { background-color: #16a34a; }
+.toast-wrap > .toast.toast-error { background-color: #dc2626; }
+.toast-wrap > .toast.toast-info { background-color: #2563eb; }
+
+/* =====================================================================
+   Responsive layer — all devices (phones, tablets, laptops, large screens)
+   Uses Bootstrap 5 breakpoints:  xs <576 · sm ≥576 · md ≥768 · lg ≥992 · xl ≥1200 · xxl ≥1400
+   Added on top of the rules above; nothing above is removed.
+   ===================================================================== */
+
+/* Never let anything push the page sideways. */
+html, body { max-width: 100%; overflow-x: clip; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+.content { min-width: 0; }
+.rf-value, .record-title, .record-sub, .who-name { overflow-wrap: break-word; }
+
+/* Card grids shrink below their 320px minimum on very small phones (320–359px). */
+.record-grid { grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); }
+
+/* Tables keep their own horizontal scroll instead of widening the page. */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* Phone top bar: logo next to the menu button, stays on top while scrolling. */
+.topbar-logo { display: none; }
+@media (max-width: 860px) {
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    align-items: center; gap: 12px;
+    background: var(--surface);
+    box-shadow: 0 1px 0 var(--border);
+  }
+  .topbar-logo { display: block; height: 38px; width: auto; max-width: 160px; object-fit: contain; }
+  .hamburger { min-width: 42px; min-height: 40px; }
+}
+
+/* ---------- Tablets (576–860px): table rows as a 2-column card grid ---------- */
+@media (min-width: 576px) and (max-width: 860px) {
+  .data-table tbody {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+    background: var(--bg); padding: 0;
+  }
+  .table-wrap { background: transparent; border: 0; box-shadow: none; }
+  .data-table tr {
+    border: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-sm);
+    padding: 8px 0;
+  }
+  .data-table td { text-align: right; }
+  .data-table td > * { text-align: right; }
+  .data-table td.empty { grid-column: 1 / -1; justify-content: center; }
+  .status-row { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ---------- Phones (<576px) ---------- */
+@media (max-width: 575.98px) {
+  .content { padding: 16px 12px 40px; }
+
+  /* Page header: title on top, buttons on one line below (no 2-line buttons). */
+  .page-head { flex-wrap: wrap; align-items: flex-start; gap: 10px; margin-bottom: 16px; }
+  .page-head > div:first-child { flex: 1 1 100%; min-width: 0; }
+  .page-head h2 { font-size: 20px; line-height: 1.25; }
+  .head-actions, .page-head > button, .page-head > a { flex-wrap: wrap; }
+  .head-actions { width: 100%; }
+  .head-actions > * { flex: 1 1 auto; justify-content: center; }
+  .page-head button, .head-actions button { white-space: nowrap; }
+
+  /* Filters / toolbars: full-width controls so the text is never cut off. */
+  .toolbar { gap: 8px; }
+  .toolbar .search, .toolbar input, .toolbar select { flex: 1 1 100%; min-width: 0; width: 100%; }
+  .toolbar > button { flex: 1 1 auto; }
+  .filter-bar { padding: 12px; gap: 10px; }
+  .filter-bar .filter { flex: 1 1 100%; min-width: 0; }
+  .filter-bar .filter-actions, .filter-bar .filter-actions .btn-ghost { width: 100%; }
+
+  /* Count tiles: 3 per row (pages are much shorter). */
+  .subject-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .subject-card { padding-left: 4px; padding-right: 4px; }
+  .subject-count { font-size: 20px; }
+  .subject-name { font-size: 11.5px; overflow-wrap: anywhere; }
+  .stat-grid, .stat-grid-4 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .status-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+
+  /* Cards */
+  .record-card { padding: 14px; }
+  .row-actions { flex-wrap: wrap; }
+
+  /* Pop-up windows: use the whole screen width, scroll inside. */
+  .modal-backdrop { padding: 10px; align-items: flex-start; }
+  .modal, .modal.narrow { max-width: 100%; border-radius: 14px; }
+  .modal-head { padding: 14px 16px; }
+  .modal-body { padding: 14px 16px; }
+  .modal-foot { padding: 12px 16px; flex-wrap: wrap; }
+  .modal-foot > button { flex: 1 1 auto; }
+
+  /* Login */
+  .login-card { padding: 26px 20px; border-radius: 14px; }
+}
+
+/* Stop iPhone/Android from zooming in when a text box is tapped. */
+@media (max-width: 767.98px) {
+  input, select, textarea { font-size: 16px !important; }
+}
+
+/* Touch screens: comfortable tap targets for small buttons. */
+@media (pointer: coarse) {
+  .btn-ghost.sm, .btn-primary.sm, .btn-danger.sm, .btn-secondary.sm { min-height: 36px; padding-top: 7px; padding-bottom: 7px; }
+  .nav-item, .nav-parent, .nav-subitem { min-height: 42px; }
+  input[type="checkbox"], input[type="radio"] { min-width: 18px; min-height: 18px; }
+}
+
+/* Small laptops (861–1199px): tighter page padding. */
+@media (min-width: 861px) and (max-width: 1199.98px) {
+  .content { padding: 22px 22px 48px; }
+}
+
+/* Large screens (≥1400px): keep lines readable instead of stretching forever. */
+@media (min-width: 1400px) {
+  .content { max-width: 1680px; }
+}
+
+/* Landscape phones: short screens — let the sidebar menu scroll comfortably. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .sidebar-brand { padding-bottom: 10px; }
+  .brand-logo { max-height: 40px; }
+}
+
+/* Admin sidebar: "Sign out" text was dark-on-dark (hard to read). */
+.sidebar.role-admin .sidebar-foot .btn-ghost { color: #fff; border-color: rgba(255, 255, 255, 0.28); background: transparent; }
+.sidebar.role-admin .sidebar-foot .btn-ghost:hover { background: var(--sidebar-hover); }
+
+/* Pop-up window close (✕) button: easier to tap on phones / touch screens. */
+@media (max-width: 767.98px), (pointer: coarse) {
+  .icon-btn { min-width: 40px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; }
+  .icon-btn:active { background: var(--bg); }
+}
+
+/* Landscape phones / small tablets (576–860px): stat cards 2 per row instead of 1 huge card. */
+@media (min-width: 576px) and (max-width: 860px) {
+  .stat-grid, .stat-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---------------- Loader (animated, replaces plain "Loading…" text) ---------------- */
+.app-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--muted, #7a8194); }
+.app-loader.lg { padding: 28px 12px; width: 100%; }
+.app-loader.inline { display: inline-flex; flex-direction: row; gap: 7px; padding: 0; width: auto; vertical-align: middle; }
+.app-loader-ring {
+  display: inline-block; flex: none; border-radius: 50%;
+  width: 42px; height: 42px; border: 4px solid #e7e9f6;
+  border-top-color: var(--primary, #4f46e5); border-right-color: #f59e0b;
+  animation: app-loader-spin 0.8s linear infinite;
+}
+.app-loader.sm .app-loader-ring { width: 15px; height: 15px; border-width: 2px; }
+.app-loader-label { font-size: 14px; font-weight: 600; letter-spacing: 0.01em; }
+.app-loader.sm .app-loader-label { font-size: inherit; font-weight: inherit; }
+.app-loader.lg .app-loader-label { animation: app-loader-pulse 1.4s ease-in-out infinite; }
+button .app-loader-ring { border-color: rgba(255, 255, 255, 0.35); border-top-color: currentColor; border-right-color: currentColor; }
+.btn-ghost .app-loader-ring, .btn-secondary .app-loader-ring { border-color: #e7e9f6; border-top-color: var(--primary, #4f46e5); border-right-color: #f59e0b; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@keyframes app-loader-spin { to { transform: rotate(360deg); } }
+@keyframes app-loader-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) {
+  .app-loader-ring { animation-duration: 2.4s; }
+  .app-loader.lg .app-loader-label { animation: none; }
+}
+
+/* Loader video (AcadHr logo animation) — white background blends into any light background */
+.app-loader-video {
+  display: block; width: 220px; max-width: 70vw; aspect-ratio: 16 / 9; height: auto; object-fit: cover;
+  background: transparent; pointer-events: none;
+  mix-blend-mode: multiply; /* the video's white background disappears into the page / card */
+}
+@media (max-width: 575.98px) { .app-loader-video { width: 180px; } }

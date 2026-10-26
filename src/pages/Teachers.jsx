@@ -5,9 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import LocationFields from '../components/LocationFields';
 import ContactActions from '../components/ContactActions';
 import DirectoryOverview from '../components/DirectoryOverview';
+import TeacherRegisterForm from '../components/TeacherRegisterForm';
 import {
   ChipMultiSelect, SUBJECTS, BOARDS, CLASSES, EXPERIENCE, LEADERSHIP, INDIAN_STATES, CITIES, COUNTRIES,
 } from '../components/FieldControls';
+import Loader from '../components/Loader';
 
 const STATUS_LABEL = { active: 'Active', pending: 'Pending', inactive: 'Inactive' };
 
@@ -107,7 +109,7 @@ export default function Teachers() {
       <div className="page-head">
         <div>
           <h2>{followupTitle}</h2>
-          <p className="muted">{loading ? 'Loading…' : `${teachers.length} shown`}</p>
+          <p className="muted">{loading ? <Loader size="sm" inline label="Loading…" /> : `${teachers.length} shown`}</p>
         </div>
         <div className="head-actions">
           <button className="btn-ghost" onClick={() => navigate('/import?type=teachers')}>⭳ Import</button>
@@ -151,7 +153,7 @@ export default function Teachers() {
         <label className="filter">
           <span>Registration</span>
           <select value={registration} onChange={(e) => setRegistration(e.target.value)}>
-            <option value="">Registration</option>
+            <option value="">All</option>
             <option value="registered">Registered</option>
             <option value="unregistered">Unregistered</option>
           </select>
@@ -220,6 +222,7 @@ export default function Teachers() {
               <div className="rf"><span className="rf-label">Boards</span><span className="rf-value">{t.boards || '—'}</span></div>
               <div className="rf"><span className="rf-label">Classes</span><span className="rf-value">{t.classes || '—'}</span></div>
               <div className="rf"><span className="rf-label">Experience</span><span className="rf-value">{t.experience || '—'}</span></div>
+              <div className="rf"><span className="rf-label">Qualification</span><span className="rf-value">{t.qualification || '—'}</span></div>
               <div className="rf"><span className="rf-label">Leadership</span><span className="rf-value">{t.leadership || '—'}</span></div>
               <div className="rf"><span className="rf-label">City</span><span className="rf-value">{t.city || '—'}</span></div>
               <div className="rf"><span className="rf-label">State</span><span className="rf-value">{t.state || '—'}</span></div>
@@ -228,6 +231,7 @@ export default function Teachers() {
               <div className="rf"><span className="rf-label">Previous school/college</span><span className="rf-value">{t.previous_institution || '—'}</span></div>
               <div className="rf"><span className="rf-label">Registration</span><span className="rf-value">{t.registration || '—'}</span></div>
               <div className="rf block"><span className="rf-label">Note</span><span className="rf-value">{t.note || '—'}</span></div>
+              <div className="rf block"><span className="rf-label">Short bio</span><span className="rf-value">{t.bio || '—'}</span></div>
             </div>
             {isAdmin && (
               <div className="assign-row">
@@ -242,13 +246,13 @@ export default function Teachers() {
           </div>
         ))}
         {loading && teachers.length === 0 && (
-          <div className="record-empty">Loading teachers…</div>
+          <div className="record-empty"><Loader label="Loading teachers…" /></div>
         )}
         {!loading && teachers.length === 0 && <div className="record-empty">No teachers found.</div>}
       </div>
 
       {adding && (
-        <TeacherForm onClose={() => setAdding(false)} onSaved={() => { setAdding(false); load(); }} />
+        <TeacherRegisterForm onClose={() => setAdding(false)} onSaved={() => { setAdding(false); load(); }} />
       )}
     </div>
   );

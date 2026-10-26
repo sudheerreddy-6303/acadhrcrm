@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
+import Loader from '../components/Loader';
 
 // Fetch tuition requirements (posted by parents on AcadHr) into the CRM
 // Tuitions list. Re-fetching updates existing tuitions instead of duplicating
@@ -58,7 +59,7 @@ export default function FetchTuitions() {
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
             <button className="btn-ghost" onClick={runPreview} disabled={busy === 'preview'}>
-              {busy === 'preview' ? 'Loading…' : 'Preview'}
+              {busy === 'preview' ? <Loader size="sm" inline label="Loading…" /> : 'Preview'}
             </button>
             <button className="btn-primary" onClick={runFetch} disabled={busy === 'fetch'}>
               {busy === 'fetch' ? 'Fetching…' : 'Fetch tuitions'}

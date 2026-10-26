@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
+import AutoSyncCard from '../components/AutoSyncCard';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { INDIAN_STATES, CITIES, SUBJECTS, COURSES } from '../components/FieldControls';
+import Loader from '../components/Loader';
 
 const STATUS_META = {
   new: { label: 'New', tone: 'blue' },
@@ -114,6 +116,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Auto-sync of new acadhr.com registrations (admins only) */}
+      {isAdmin && <AutoSyncCard />}
+
       {/* ---------------- Directory (teachers / tutors / schools) ---------------- */}
       <h3 className="section-title">Directory</h3>
 
@@ -121,7 +126,7 @@ export default function Dashboard() {
         <label className="filter">
           <span>Registration</span>
           <select value={filters.registration} onChange={setF('registration')}>
-            <option value="">Registration</option>
+            <option value="">All</option>
             <option value="registered">Registered</option>
             <option value="unregistered">Unregistered</option>
           </select>
@@ -310,7 +315,7 @@ export default function Dashboard() {
             </div>
             <div className="modal-body">
               {results?.error && <div className="alert">{results.error}</div>}
-              {(!results || results.loading) && <p className="muted">Loading…</p>}
+              {(!results || results.loading) && <Loader label="Loading…" />}
               {results && !results.loading && !results.error && (
                 <>
                   <h4 className="section-title" style={{ marginTop: 0 }}>

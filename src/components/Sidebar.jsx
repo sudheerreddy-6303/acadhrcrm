@@ -23,20 +23,33 @@ const FETCH_ACADHR_TEACHERS_CHILD = { label: 'Fetch from AcadHr', to: '/fetch-te
 const FETCH_ACADHR_TUITIONS_CHILD = { label: 'Fetch from AcadHr', to: '/fetch-tuitions', linkChild: true };
 const TUITION_CHILDREN = [...FOLLOWUP_CHILDREN, FETCH_ACADHR_TUITIONS_CHILD];
 
+// Admin-only sub-item under Schools: pull schools from the AcadHr database.
+const FETCH_ACADHR_SCHOOLS_CHILD = { label: 'Fetch from AcadHr', to: '/fetch-schools', linkChild: true };
+
 // Followup children + Import & Assign, for sections that support importing.
 const CHILDREN_WITH_IMPORT = [...FOLLOWUP_CHILDREN, IMPORT_ASSIGN_CHILD];
 // Tutors additionally get the "Fetch from AcadHr" link.
 const TUTOR_CHILDREN = [...FOLLOWUP_CHILDREN, IMPORT_ASSIGN_CHILD, FETCH_ACADHR_CHILD];
 // Teachers additionally get their own "Fetch from AcadHr" link.
 const TEACHER_CHILDREN = [...FOLLOWUP_CHILDREN, IMPORT_ASSIGN_CHILD, FETCH_ACADHR_TEACHERS_CHILD];
+// Schools additionally get their own "Fetch from AcadHr" link (same as Teachers).
+const SCHOOL_CHILDREN = [...FOLLOWUP_CHILDREN, IMPORT_ASSIGN_CHILD, FETCH_ACADHR_SCHOOLS_CHILD];
+
+// WhatsApp group: sub-pages visible to everyone (admins and AcadHrs).
+const WHATSAPP_CHILDREN = [
+  { label: 'Meta WhatsApp', to: '/whatsapp/meta', pageChild: true },
+  { label: 'Bulk WhatsApp', to: '/whatsapp/bulk', pageChild: true },
+];
 
 const NAV = [
   { to: '/dashboard', label: 'Dashboard', icon: '▤' },
   { to: '/leads', label: 'Leads', icon: '☎' },
   { key: 'teachers', to: '/teachers', label: 'Teachers', icon: '✎', children: TEACHER_CHILDREN },
   { key: 'tutors', to: '/tutors', label: 'Tutors', icon: '◎', children: TUTOR_CHILDREN },
-  { key: 'schools', to: '/schools', label: 'Schools', icon: '⌂', children: CHILDREN_WITH_IMPORT },
+  { key: 'schools', to: '/schools', label: 'Schools', icon: '⌂', children: SCHOOL_CHILDREN },
   { key: 'tuitions', to: '/tuitions', label: 'Tuitions', icon: '✐', children: TUITION_CHILDREN },
+  { to: '/business-associates', label: 'Business Associates', icon: '⚑' },
+  { key: 'whatsapp', to: '/whatsapp/meta', label: 'WhatsApp', icon: '💬', children: WHATSAPP_CHILDREN },
   { to: '/acadhrs', label: 'AcadHrs', icon: '☏', adminOnly: true },
   { to: '/users', label: 'Users', icon: '⚙', adminOnly: true },
 ];
@@ -54,6 +67,12 @@ export default function Sidebar({ open, onClose }) {
   // Auto-expand the group that matches the page you're currently on.
   useEffect(() => {
     const match = NAV.find((n) => n.children && location.pathname === n.to);
+    if (match) setOpenKey(match.key);
+  }, [location.pathname]);
+
+  // Also auto-expand a group when you're on one of its sub-pages (e.g. Bulk WhatsApp).
+  useEffect(() => {
+    const match = NAV.find((n) => n.children && n.children.some((c) => c.pageChild && c.to === location.pathname));
     if (match) setOpenKey(match.key);
   }, [location.pathname]);
 
@@ -126,6 +145,20 @@ export default function Sidebar({ open, onClose }) {
                           <Link
                             key={`import-assign-${item.key}`}
                             to={`/import-assign?type=${item.key}`}
+                            className={`nav-subitem ${active ? 'active' : ''}`}
+                            onClick={onClose}
+                          >
+                            {child.label}
+                          </Link>
+                        );
+                      }
+                      // Page sub-item (e.g. "Meta WhatsApp") — visible to everyone.
+                      if (child.pageChild) {
+                        const active = location.pathname === child.to;
+                        return (
+                          <Link
+                            key={`page-${child.to}`}
+                            to={child.to}
                             className={`nav-subitem ${active ? 'active' : ''}`}
                             onClick={onClose}
                           >

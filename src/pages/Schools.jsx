@@ -7,6 +7,7 @@ import ContactActions from '../components/ContactActions';
 import DirectoryOverview from '../components/DirectoryOverview';
 import DirectoryFilters from '../components/DirectoryFilters';
 import { INDIAN_STATES, CITIES, COUNTRIES } from '../components/FieldControls';
+import Loader from '../components/Loader';
 
 const STATUS_LABEL = { active: 'Active', pending: 'Pending', inactive: 'Inactive' };
 
@@ -85,7 +86,7 @@ export default function Schools() {
       <div className="page-head">
         <div>
           <h2>{followupTitle}</h2>
-          <p className="muted">{loading ? 'Loading…' : `${schools.length} shown`}</p>
+          <p className="muted">{loading ? <Loader size="sm" inline label="Loading…" /> : `${schools.length} shown`}</p>
         </div>
         <div className="head-actions">
           <button className="btn-ghost" onClick={() => navigate('/import?type=schools')}>⭳ Import</button>
@@ -155,7 +156,7 @@ export default function Schools() {
           </div>
         ))}
         {loading && schools.length === 0 && (
-          <div className="record-empty">Loading schools…</div>
+          <div className="record-empty"><Loader label="Loading schools…" /></div>
         )}
         {!loading && schools.length === 0 && <div className="record-empty">No schools found.</div>}
       </div>

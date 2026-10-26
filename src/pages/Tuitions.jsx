@@ -5,6 +5,7 @@ import DirectoryFilters from '../components/DirectoryFilters';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import ContactActions from '../components/ContactActions';
+import Loader from '../components/Loader';
 
 const fmtDate = (v) => {
   if (!v) return '—';
@@ -148,7 +149,7 @@ export default function Tuitions() {
             <ContactActions type="tuitions" id={t.id} registration={t.registration} />
           </div>
         ))}
-        {loading && tuitions.length === 0 && <div className="record-empty">Loading tuitions…</div>}
+        {loading && tuitions.length === 0 && <div className="record-empty"><Loader label="Loading tuitions…" /></div>}
       </div>
 
       {!loading && tuitions.length === 0 && (

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '../api/client';
+import Loader from '../components/Loader';
 
 const EMPTY = { name: '', email: '', password: '', role: 'telecaller' };
 
@@ -267,7 +268,7 @@ function PerformanceModal({ user, onClose }) {
               </div>
             </>
           ) : (
-            !error && <p className="muted">Loading…</p>
+            !error && <Loader label="Loading…" />
           )}
 
           {/* Tab switch: what they wrote vs their leads */}
@@ -301,7 +302,7 @@ function PerformanceModal({ user, onClose }) {
               </div>
 
               {loadingList ? (
-                <p className="muted">Loading…</p>
+                <Loader label="Loading…" />
               ) : (
                 <ul className="activity-list">
                   {activities.map((a) => (

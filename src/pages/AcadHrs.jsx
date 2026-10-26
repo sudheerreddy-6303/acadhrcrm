@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
+import Loader from '../components/Loader';
 
 const STATUS_LABEL = { new: 'New', contacted: 'Contacted', follow_up: 'Follow-up', converted: 'Converted', lost: 'Lost' };
 
@@ -71,7 +72,7 @@ export default function AcadHrs() {
         {list.length === 0 && !error && <p className="muted">No AcadHrs yet. Add them in Users.</p>}
       </div>
 
-      {loading && <p className="muted" style={{ marginTop: 20 }}>Loading…</p>}
+      {loading && <div style={{ marginTop: 20 }}><Loader label="Loading…" /></div>}
 
       {/* ---------- Detail drill-down view ---------- */}
       {stats && detail && (
@@ -79,7 +80,7 @@ export default function AcadHrs() {
           <button className="btn-ghost" onClick={() => setDetail(null)}>← Back to {stats.user.name}</button>
           <h3 className="section-title mt-lg">{detail.title}</h3>
           {detail.rows === null ? (
-            <p className="muted">Loading…</p>
+            <Loader label="Loading…" />
           ) : detail.rows.length === 0 ? (
             <div className="record-empty">Nothing to show here.</div>
           ) : detail.kind === 'leads' ? (

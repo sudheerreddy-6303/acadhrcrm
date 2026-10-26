@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
+import Loader from '../components/Loader';
 
 // Fetch tutors from the AcadHr schema (same server) and bring them into the
 // CRM Tutors list as UNREGISTERED records, reusing the existing import flow.
@@ -121,7 +122,7 @@ export default function FetchTutors() {
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
             <button className="btn-ghost" onClick={runPreview} disabled={busy === 'preview'}>
-              {busy === 'preview' ? 'Loading…' : 'Preview'}
+              {busy === 'preview' ? <Loader size="sm" inline label="Loading…" /> : 'Preview'}
             </button>
             <button className="btn-primary" onClick={runFetch} disabled={busy === 'fetch'}>
               {busy === 'fetch' ? 'Fetching…' : 'Fetch & check'}

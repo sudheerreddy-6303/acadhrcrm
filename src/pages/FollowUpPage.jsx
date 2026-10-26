@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
+import AcadhrPlans from '../components/AcadhrPlans';
+import TutorDocuments from '../components/TutorDocuments';
+import Loader from '../components/Loader';
 
 const STATUS_LABEL = { active: 'Active', pending: 'Pending', inactive: 'Inactive' };
 const ORDINALS = ['1st', '2nd', '3rd'];
@@ -59,10 +62,14 @@ const FIELDS = {
     ['phone', 'Phone'], ['email', 'Email'], ['subjects', 'Subjects'], ['boards', 'Boards'],
     ['classes', 'Classes'], ['experience', 'Experience'], ['city', 'City'], ['state', 'State'],
     ['previous_institution', 'Previous school/college'], ['note', 'Note'],
+    ['qualification', 'Qualification'], ['country', 'Country'], ['bio', 'Short bio'],
   ],
   tutors: [
     ['phone', 'Phone'], ['email', 'Email'], ['subjects', 'Subjects'], ['boards', 'Boards'],
     ['classes', 'Classes'], ['timing', 'Timing'], ['city', 'City'], ['state', 'State'], ['note', 'Note'],
+    ['qualification', 'Qualification'], ['experience', 'Experience'], ['hourly_charges', 'Hourly charges'],
+    ['gender', 'Gender'], ['teaching_mode', 'Teaching mode'], ['address', 'Address'], ['location', 'Location'],
+    ['pincode', 'Pincode'], ['class_link', 'Class link'], ['demo_link', 'Demo class link'], ['bio', 'About'],
   ],
   schools: [
     ['location', 'Location'], ['contact_person', 'Contact'], ['designation', 'Designation'],
@@ -285,6 +292,19 @@ export default function FollowUpPage() {
 
   const valid = ['teachers', 'tutors', 'schools', 'tuitions'].includes(type);
 
+  // Plans read live from acadhr.plans. null = not loaded / not available ->
+  // the built-in plan cards below are shown instead (unchanged).
+  const [livePlans, setLivePlans] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    setLivePlans(null);
+    if (!valid) return undefined;
+    api.get(`/plans?type=${type}`)
+      .then((d) => { if (alive && d && Array.isArray(d.groups) && d.groups.length) setLivePlans(d); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [type, valid]);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -400,7 +420,7 @@ export default function FollowUpPage() {
     <div className="page followup-page">
       <button className="btn-back" onClick={() => navigate(-1)}>← Back</button>
 
-      {loading && <div className="record-empty">Loading…</div>}
+      {loading && <div className="record-empty"><Loader label="Loading…" /></div>}
       {error && <div className="alert">{error}</div>}
 
       {record && (
@@ -459,8 +479,22 @@ export default function FollowUpPage() {
             </div>
           </div>
 
+          {/* Tutor photo + resume */}
+          {type === 'tutors' && <TutorDocuments id={id} asCard />}
+
+          {/* Plans fetched live from acadhr.plans (when available) */}
+          {livePlans && (
+            <AcadhrPlans
+              type={type}
+              record={record}
+              groups={livePlans.groups}
+              source={livePlans.source}
+              onSaved={(res) => setRecord((r) => ({ ...r, plan: res.plan, plan_period: res.plan_period }))}
+            />
+          )}
+
           {/* School subscription plan (schools only) */}
-          {planOpts && (
+          {planOpts && !livePlans && (
             <div className="card">
               <div className="fu-section-head"><h3>Plan</h3></div>
               <div className="plan-options">
