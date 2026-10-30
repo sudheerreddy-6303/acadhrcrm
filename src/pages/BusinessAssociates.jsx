@@ -64,14 +64,16 @@ export default function BusinessAssociates() {
   useEffect(() => { load(); }, [load]);
 
   const remove = async (a) => {
-    if (!window.confirm(`Delete business associate "${a.name}"? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete business associate "${a.name}"? This cannot be undone.`)) return false;
     setError('');
     try {
       await api.del(`/business-associates/${a.id}`); // client shows "Deleted" popup
       setRows((prev) => prev.filter((x) => x.id !== a.id));
+      return true;
     } catch (e) {
       setError(e.message);
       toast(e.message || 'Could not delete', 'error');
+      return false;
     }
   };
 
@@ -169,7 +171,8 @@ export default function BusinessAssociates() {
               {a.mobile && <button className="btn-ghost sm" onClick={() => copy(a.mobile, 'Mobile number')}>Copy</button>}
               <button className="btn-ghost sm" onClick={() => setViewing(a)}>View</button>
               <button className="btn-ghost sm" onClick={() => navigate(`/business-associates/${a.id}/edit`)}>Edit</button>
-              {isAdmin && <button className="btn-danger sm" onClick={() => remove(a)}>Delete</button>}
+              <button className="btn-contact compact" onClick={() => navigate(`/business-associates/${a.id}/followup`)}>Follow up</button>
+              {/* Delete is inside the card: View window and Follow up page (admins only) */}
             </div>
           </div>
         ))}
@@ -185,7 +188,13 @@ export default function BusinessAssociates() {
         />
       )}
 
-      {viewing && <AssociateView record={viewing} onClose={() => setViewing(null)} />}
+      {viewing && (
+        <AssociateView
+          record={viewing}
+          onClose={() => setViewing(null)}
+          onDelete={isAdmin ? async () => { if (await remove(viewing)) setViewing(null); } : undefined}
+        />
+      )}
     </div>
   );
 }
@@ -502,7 +511,7 @@ export function AssociateForm({ record, onClose, onSaved, fullPage = false }) {
   );
 }
 
-function AssociateView({ record: a, onClose }) {
+function AssociateView({ record: a, onClose, onDelete }) {
   const rows = [
     ['Associate Name', a.name],
     ['Mobile Number', a.mobile],
@@ -537,6 +546,7 @@ function AssociateView({ record: a, onClose }) {
           </div>
         </div>
         <div className="modal-foot">
+          {onDelete && <button className="btn-danger" onClick={onDelete}>Delete</button>}
           <div className="spacer" />
           <button className="btn-ghost" onClick={onClose}>Close</button>
         </div>

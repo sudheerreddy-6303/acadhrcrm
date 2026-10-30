@@ -392,6 +392,7 @@ function ProjectPicker({ options, value, onChange, onAdd }) {
 // (Meta: Read / Delivered / Failed + Update status), "Saved … by …" footer.
 
 function HistoryCard({ h, isMeta, isAdmin, onChanged, onDelete }) {
+  const [more, setMore] = useState(false); // shows the Delete option inside the card
   const [editing, setEditing] = useState(false);
   const [s, setS] = useState({ read_count: '', delivered_count: '', failed_count: '' });
   const [busy, setBusy] = useState(false);
@@ -486,6 +487,17 @@ function HistoryCard({ h, isMeta, isAdmin, onChanged, onDelete }) {
         </div>
       )}
 
+      {/* Inside the card (admins): Delete, opened from "⋯ More" */}
+      {isAdmin && more && !editing && (
+        <div style={{ marginTop: 12, padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 13.5, color: '#7f1d1d' }}>Delete this entry permanently?</span>
+          <span style={{ display: 'flex', gap: 6 }}>
+            <button className="btn-ghost sm" onClick={() => setMore(false)}>Cancel</button>
+            <button className="btn-danger sm" onClick={onDelete}>Delete</button>
+          </span>
+        </div>
+      )}
+
       {/* Footer */}
       <div style={{ borderTop: '1px solid var(--border, #e6e8ef)', marginTop: 14, paddingTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 13.5, color: '#5b6272' }}>
@@ -499,7 +511,7 @@ function HistoryCard({ h, isMeta, isAdmin, onChanged, onDelete }) {
               <button className="btn-primary sm" style={{ background: GREEN }} onClick={saveStatus} disabled={busy}>{busy ? 'Saving…' : 'Save status'}</button>
             </>
           )}
-          {isAdmin && !editing && <button className="btn-danger sm" onClick={onDelete}>Delete</button>}
+          {isAdmin && !editing && <button className="btn-ghost sm" onClick={() => setMore((m) => !m)} aria-expanded={more}>{more ? '✕ Close' : '⋯ More'}</button>}
         </span>
       </div>
     </div>

@@ -1101,3 +1101,42 @@ button .app-loader-ring { border-color: rgba(255, 255, 255, 0.35); border-top-co
   mix-blend-mode: multiply; /* the video's white background disappears into the page / card */
 }
 @media (max-width: 575.98px) { .app-loader-video { width: 180px; } }
+
+/* ---------------- Business Associate follow-up (This call + Call history) ---------------- */
+.ba-fu .card { margin-bottom: 18px; }
+.ba-call-box { background: #f1f8f3; border: 1px solid #cfe6d6; border-radius: 12px; padding: 16px 16px 14px; }
+.ba-call-title { display: flex; align-items: center; gap: 8px; font-size: 17px; color: #1f3a2a; margin: 0 0 10px; }
+.ba-call-title span { color: #db2777; }
+.ba-call-box .field > span { color: #4b5563; font-weight: 650; }
+.ba-call-box input, .ba-call-box select, .ba-call-box textarea { background: #fff; }
+.ba-call-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 0 16px; }
+.ba-call-help { margin: 0 0 12px; font-size: 13.5px; color: #4b5563; }
+.ba-btn-green { background: #1f5132; color: #fff; border: 0; border-radius: 9px; padding: 10px 20px; font-weight: 650; cursor: pointer; min-height: 40px; }
+.ba-btn-green.sm { padding: 7px 14px; min-height: 36px; font-size: 13.5px; }
+.ba-btn-green:disabled { opacity: 0.7; cursor: default; }
+.ba-btn-reply { margin-top: 8px; background: #fff; color: #1f5132; border: 1.5px solid #1f5132; border-radius: 9px; padding: 6px 12px; font-weight: 650; font-size: 13.5px; cursor: pointer; min-height: 36px; }
+.ba-btn-reply:hover { background: #f1f8f3; }
+.ba-history { border: 1px solid #d7e8dc; border-radius: 12px; overflow: hidden; }
+.ba-history table { width: 100%; border-collapse: collapse; }
+.ba-history thead th { background: #d9eedf; color: #1f3a2a; text-align: left; font-weight: 650; font-size: 14px; padding: 12px 14px; }
+.ba-history tbody td { padding: 12px 14px; vertical-align: top; border-top: 1px solid #eef2ef; font-size: 14px; }
+.ba-history tbody tr:first-child td { border-top: 0; }
+.ba-cat { text-transform: uppercase; letter-spacing: 0.02em; }
+.ba-remark { white-space: pre-wrap; overflow-wrap: anywhere; }
+.ba-replies { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.ba-replies li { background: #f6faf7; border-left: 3px solid #9fd0ad; border-radius: 6px; padding: 6px 10px; font-size: 13.5px; overflow-wrap: anywhere; }
+.ba-reply-who { font-weight: 650; margin-right: 8px; }
+.ba-reply-when { color: var(--muted, #7a8194); font-size: 12px; }
+.ba-reply-box { margin-top: 8px; display: grid; gap: 8px; }
+.ba-reply-box textarea { width: 100%; }
+@media (max-width: 640px) {
+  .ba-history thead { display: none; }
+  .ba-history table, .ba-history tbody, .ba-history tr, .ba-history td { display: block; width: 100%; }
+  .ba-history tr { border-top: 8px solid #f1f8f3; }
+  .ba-history tbody tr:first-child { border-top: 0; }
+  .ba-history tbody td { border-top: 0; padding: 6px 14px; display: grid; grid-template-columns: 96px 1fr; gap: 10px; }
+  .ba-history tbody td::before { content: attr(data-label); font-weight: 650; color: #4b5563; font-size: 12.5px; text-transform: none; letter-spacing: 0; }
+  /* Remark cell: label on top, then remark, replies and the reply box at full width */
+  .ba-history tbody td[data-label="Remark"] { display: block; }
+  .ba-history tbody td[data-label="Remark"]::before { display: block; margin-bottom: 4px; }
+}

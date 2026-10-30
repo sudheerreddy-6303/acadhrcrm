@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import AcadhrPlans from '../components/AcadhrPlans';
 import TutorDocuments from '../components/TutorDocuments';
+import CallFollowUp from '../components/CallFollowUp';
 import Loader from '../components/Loader';
 
 const STATUS_LABEL = { active: 'Active', pending: 'Pending', inactive: 'Inactive' };
@@ -291,6 +292,8 @@ export default function FollowUpPage() {
   const [savingJob, setSavingJob] = useState(false);
 
   const valid = ['teachers', 'tutors', 'schools', 'tuitions'].includes(type);
+  // The earlier 1st/2nd/3rd call boxes are kept, behind a "Show" link.
+  const [showOldSlots, setShowOldSlots] = useState(false);
 
   // Plans read live from acadhr.plans. null = not loaded / not available ->
   // the built-in plan cards below are shown instead (unchanged).
@@ -529,7 +532,17 @@ export default function FollowUpPage() {
             </div>
           )}
 
+          {/* This call + Call history (same as Business Associates) */}
+          <CallFollowUp type={type} id={id} />
+
+          <div style={{ margin: '-6px 0 16px' }}>
+            <button type="button" className="btn-ghost sm" onClick={() => setShowOldSlots((v) => !v)} aria-expanded={showOldSlots}>
+              {showOldSlots ? '▾ Hide earlier 1st / 2nd / 3rd call boxes' : `▸ Show earlier 1st / 2nd / 3rd call boxes (${completedCount} of ${MAX_FOLLOW_UPS} filled)`}
+            </button>
+          </div>
+
           {/* Follow-up calls — all three shown at once */}
+          {showOldSlots && (
           <div className="card">
             <div className="fu-section-head">
               <h3>Follow-ups</h3>
@@ -576,6 +589,7 @@ export default function FollowUpPage() {
               </button>
             </div>
           </div>
+          )}
 
           {/* Job follow-up — shown once the record is registered */}
           {record.registration === 'registered' && (

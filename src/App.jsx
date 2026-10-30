@@ -20,6 +20,7 @@ import AcadHrs from './pages/AcadHrs';
 import Users from './pages/Users';
 import BusinessAssociates from './pages/BusinessAssociates';
 import BusinessAssociateFormPage from './pages/BusinessAssociateFormPage';
+import BusinessAssociateFollowUp from './pages/BusinessAssociateFollowUp';
 import WhatsAppMeta from './pages/WhatsAppMeta';
 import WhatsAppBulk from './pages/WhatsAppBulk';
 import Toast from './components/Toast';
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="/business-associates" element={<BusinessAssociates />} />
             <Route path="/business-associates/new" element={<BusinessAssociateFormPage />} />
             <Route path="/business-associates/:id/edit" element={<BusinessAssociateFormPage />} />
+            <Route path="/business-associates/:id/followup" element={<BusinessAssociateFollowUp />} />
             <Route path="/whatsapp/meta" element={<WhatsAppMeta />} />
             <Route path="/whatsapp/bulk" element={<WhatsAppBulk />} />
             <Route path="/followup/:type/:id" element={<FollowUpPage />} />
